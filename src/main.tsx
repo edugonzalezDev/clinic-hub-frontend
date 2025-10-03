@@ -4,6 +4,7 @@ import "./index.css";
 import "./tailwind.css";
 import { BrowserRouter } from "react-router";
 import AppRoutes from "./routes";
+import { Toaster } from "sonner";
 
 const rootElement = document.getElementById("root");
 if (!rootElement) throw new Error("Failed to find the root element");
@@ -23,7 +24,8 @@ enableMocking().then(() => {
   root.render(
     <React.StrictMode>
       <BrowserRouter>
-        <AppRoutes />
+        <Toaster />
+      <AppRoutes />
       </BrowserRouter>
     </React.StrictMode>
   );

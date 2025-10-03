@@ -1,118 +1,156 @@
-import { useNavigate } from "react-router";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router";
 import { Button } from "@/components/ui/button";
-import { Activity, Video, Calendar, FileText, Shield, Users } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Activity, UserCircle, Stethoscope, ArrowLeft } from "lucide-react";
+import { toast } from "sonner"
 
 const Login = () => {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const [isLogin, setIsLogin] = useState(true);
+    const [userType, setUserType] = useState<"patient" | "doctor">("patient");
 
-    const features = [
-        {
-            icon: Video,
-            title: "Teleconsulta",
-            description: "Conéctate con profesionales de la salud mediante videollamadas seguras.",
-        },
-        {
-            icon: Calendar,
-            title: "Agenda fácil",
-            description: "Reserva turnos cuando te convenga y recibe confirmación al instante.",
-        },
-        {
-            icon: FileText,
-            title: "Historia clínica",
-            description: "Accede a tu historial médico completo en cualquier momento y lugar.",
-        },
-        {
-            icon: Shield,
-            title: "Seguro y privado",
-            description: "Tus datos de salud están protegidos con seguridad de nivel empresarial.",
-        },
-    ];
+    useEffect(() => {
+        const type = searchParams.get("type");
+        if (type === "doctor" || type === "patient") {
+            setUserType(type);
+        }
+    }, [searchParams]);
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        toast.success(`${isLogin ? "Logged in" : "Registered"} as ${userType}`)
+        navigate(userType === "patient" ? "/patient-dashboard" : "/doctor-dashboard");
+    };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-secondary/10">
-            {/* Navegación */}
-            <nav className="border-b bg-card/50 backdrop-blur-sm">
-                <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-primary rounded-xl flex items-center justify-center">
-                            <Activity className="w-5 h-5 text-white" />
-                        </div>
-                        <span className="text-xl font-semibold">HealthConnect</span>
-                    </div>
-                    <Button onClick={() => navigate("/select-user-type")} size="lg">
-                        Comenzar
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-secondary/5 p-4">
+            <Card className="w-full max-w-md shadow-lg relative">
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => navigate("/")}
+                    className="absolute top-4 left-4 gap-2"
+                >
+                    <ArrowLeft className="w-4 h-4" />
+                    Volver
+                </Button>
+                <div className="absolute top-4 right-4 flex gap-2">
+                    <Button
+                        type="button"
+                        variant={userType === "patient" ? "default" : "outline"}
+                        onClick={() => setUserType("patient")}
+                        size="sm"
+                        className="gap-2"
+                    >
+                        <UserCircle className="w-4 h-4" />
+                        Paciente
+                    </Button>
+                    <Button
+                        type="button"
+                        variant={userType === "doctor" ? "default" : "outline"}
+                        onClick={() => setUserType("doctor")}
+                        size="sm"
+                        className="gap-2"
+                    >
+                        <Stethoscope className="w-4 h-4" />
+                        Doctor
                     </Button>
                 </div>
-            </nav>
-
-            {/* Hero */}
-            <section className="container mx-auto px-4 py-20 text-center">
-                <div className="max-w-3xl mx-auto space-y-6">
-                    <h1 className="text-5xl font-bold leading-tight">
-                        Salud moderna
-                        <br />
-                        <span className="text-primary">a tu alcance</span>
-                    </h1>
-                    <p className="text-xl text-muted-foreground">
-                        Conéctate con profesionales certificados, gestiona tus turnos y accede a tu historia clínica
-                        en una sola plataforma segura.
-                    </p>
-                    <div className="flex gap-4 justify-center pt-6">
-                        <Button size="lg" onClick={() => navigate("/login?type=patient")} className="gap-2">
-                            <Users className="w-5 h-5" />
-                            Portal de Pacientes
-                        </Button>
-                        <Button size="lg" variant="outline" onClick={() => navigate("/login?type=doctor")} className="gap-2">
-                            <Activity className="w-5 h-5" />
-                            Portal de Profesionales
-                        </Button>
+                <CardHeader className="space-y-3 text-center pt-16">
+                    <div className="mx-auto w-16 h-16 my-gradient-class rounded-2xl flex items-center justify-center shadow-md">
+                        <Activity className="w-8 h-8 text-white" />
                     </div>
-                </div>
-            </section>
+                    <CardTitle className="text-3xl">HealthConnect</CardTitle>
+                    <CardDescription className="text-base">
+                        Tu plataforma de telemedicina de confianza
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Tabs value={isLogin ? "login" : "register"} onValueChange={(v) => setIsLogin(v === "login")} className="space-y-6">
+                        <TabsList className="grid w-full grid-cols-2">
+                            <TabsTrigger value="login">Login</TabsTrigger>
+                            <TabsTrigger value="register">Registro</TabsTrigger>
+                        </TabsList>
 
-            {/* Features */}
-            <section className="container mx-auto px-4 py-20">
-                <div className="text-center mb-12">
-                    <h2 className="text-3xl font-bold mb-4">¿Por qué elegir HealthConnect?</h2>
-                    <p className="text-muted-foreground">
-                        Atención médica que se adapta a tu estilo de vida
-                    </p>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {features.map((feature, index) => (
-                        <div
-                            key={index}
-                            className="p-6 rounded-2xl bg-card border shadow-sm hover:shadow-md transition-shadow"
-                        >
-                            <div className="w-12 h-12 bg-gradient-primary rounded-xl flex items-center justify-center mb-4">
-                                <feature.icon className="w-6 h-6 text-white" />
-                            </div>
-                            <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
-                            <p className="text-sm text-muted-foreground">{feature.description}</p>
-                        </div>
-                    ))}
-                </div>
-            </section>
+                        <TabsContent value="login" className="space-y-4">
+                            <form onSubmit={handleSubmit} className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="email">Email</Label>
+                                    <Input
+                                        id="email"
+                                        type="email"
+                                        placeholder="usuario@ejemplo.com"
+                                        required
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="password">Password</Label>
+                                    <Input
+                                        id="password"
+                                        type="password"
+                                        placeholder="••••••••"
+                                        required
+                                    />
+                                </div>
+                                <Button type="submit" className="w-full" size="lg">
+                                    Login como {userType === "patient" ? "Paciente" : "Doctor"}
+                                </Button>
+                            </form>
+                        </TabsContent>
 
-            {/* CTA */}
-            <section className="container mx-auto px-4 py-20">
-                <div className="bg-gradient-primary rounded-3xl p-12 text-center text-white">
-                    <h2 className="text-3xl font-bold mb-4">¿Listo para empezar?</h2>
-                    <p className="text-lg mb-8 opacity-90">
-                        Súmate a miles de pacientes y profesionales que ya usan HealthConnect
-                    </p>
-                    <Button size="lg" variant="secondary" onClick={() => navigate("/login")}>
-                        Crear mi cuenta
-                    </Button>
-                </div>
-            </section>
-
-            {/* Footer */}
-            <footer className="border-t bg-card/50 backdrop-blur-sm">
-                <div className="container mx-auto px-4 py-8 text-center text-sm text-muted-foreground">
-                    <p>© {new Date().getFullYear()} HealthConnect. Tu plataforma confiable de telemedicina.</p>
-                </div>
-            </footer>
+                        <TabsContent value="register" className="space-y-4">
+                            <form onSubmit={handleSubmit} className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="name">Nombre completo</Label>
+                                    <Input
+                                        id="name"
+                                        type="text"
+                                        placeholder="John Doe"
+                                        required
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="reg-email">Email</Label>
+                                    <Input
+                                        id="reg-email"
+                                        type="email"
+                                        placeholder="usuario@ejemplo.com"
+                                        required
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="reg-password">Contraseña</Label>
+                                    <Input
+                                        id="reg-password"
+                                        type="password"
+                                        placeholder="••••••••"
+                                        required
+                                    />
+                                </div>
+                                {userType === "doctor" && (
+                                    <div className="space-y-2">
+                                        <Label htmlFor="license">Número de licencia médica</Label>
+                                        <Input
+                                            id="license"
+                                            type="text"
+                                            placeholder="MD123456"
+                                            required
+                                        />
+                                    </div>
+                                )}
+                                <Button type="submit" className="w-full" size="lg">
+                                    Registerse como {userType === "patient" ? "Paciente" : "Doctor"}
+                                </Button>
+                            </form>
+                        </TabsContent>
+                    </Tabs>
+                </CardContent>
+            </Card>
         </div>
     );
 };

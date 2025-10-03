@@ -222,6 +222,16 @@
     --sidebar-ring: oklch(0.551 0.027 264.364);
 }
 
+
+.my-gradient-class {
+    background-image: linear-gradient(to bottom right,
+            #4F46E5,
+            /* indigo-600 */
+            #0EA5E9
+            /* sky-500 */
+        );
+}
+
 @layer base {
     * {
         @apply border-border outline-ring/50;
