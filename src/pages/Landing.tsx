@@ -8,23 +8,33 @@ export default function LandingPage() {
     const features = [
         {
             icon: Video,
-            title: "Teleconsultation",
-            description: "Connect with healthcare professionals through secure video calls",
+            // title: "Teleconsultation",
+            // description: "Connect with healthcare professionals through secure video calls",
+            title: "Teleconsulta",
+            description: "Conéctate con profesionales de la salud mediante videollamadas seguras.",
+
         },
         {
             icon: Calendar,
-            title: "Easy Scheduling",
-            description: "Book appointments at your convenience with instant confirmation",
+            // title: "Easy Scheduling",
+            // description: "Book appointments at your convenience with instant confirmation",
+            title: "Agenda fácil",
+            description: "Reserva turnos cuando te convenga y recibe confirmación al instante.",
+
         },
         {
             icon: FileText,
-            title: "Medical Records",
-            description: "Access your complete medical history anytime, anywhere",
+            // title: "Medical Records",
+            // description: "Access your complete medical history anytime, anywhere",
+            title: "Historia clínica",
+            description: "Accede a tu historial médico completo en cualquier momento y lugar.",
         },
         {
             icon: Shield,
-            title: "Secure & Private",
-            description: "Your health data is protected with enterprise-grade security",
+            // title: "Secure & Private",
+            // description: "Your health data is protected with enterprise-grade security",
+            title: "Seguro y privado",
+            description: "Tus datos de salud están protegidos con seguridad de nivel empresarial.",
         },
     ];
 
@@ -37,10 +47,10 @@ export default function LandingPage() {
                         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-600 to-sky-500 flex items-center justify-center shadow">
                             <Activity className="w-5 h-5 text-white" />
                         </div>
-                        <span className="text-xl font-semibold">HealthConnect</span>
+                        <span className="text-xl font-semibold dark:text-white text-primary">HealthConnect</span>
                     </div>
-                    <Button onClick={() => navigate("/select-user-type")} size="lg">
-                        Get Started
+                    <Button onClick={() => navigate("/select-user-type")} size="lg" className="dark:bg-gradient-to-br dark:from-indigo-600 dark:to-sky-500 dark:text-primary dark:hover:text-white dark:hover:shadow-lg dark:hover:shadow-indigo-500/20 dark:hover:bg-gradient-to-br dark:hover:from-indigo-700 dark:hover:to-sky-600 transition duration-300">
+                        Comenzar
                     </Button>
                 </div>
             </nav>
@@ -48,24 +58,24 @@ export default function LandingPage() {
             {/* Hero Section */}
             <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
                 <div className="max-w-3xl mx-auto space-y-6">
-                    <h1 className="text-4xl sm:text-5xl font-bold leading-tight tracking-tight">
-                        Modern Healthcare
+                    <h1 className="text-4xl sm:text-5xl font-bold leading-tight tracking-tight dark:text-white text-primary">
+                        Salud moderna
                         <br />
                         <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-sky-500">
-                            At Your Fingertips
+                            a tu alcance
                         </span>
                     </h1>
                     <p className="text-lg sm:text-xl text-slate-600 dark:text-slate-300">
-                        Connect with qualified healthcare professionals, manage appointments, and access your medical records all in one secure platform.
+                        Conéctate con profesionales certificados, gestiona tus turnos y accede a tu historia clínica en una sola plataforma segura.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center pt-6">
                         <Button size="lg" onClick={() => navigate("/login?type=patient")} className="gap-2">
                             <Users className="w-5 h-5" />
-                            Patient Portal
+                            Portal de Pacientes
                         </Button>
                         <Button size="lg" variant="outline" onClick={() => navigate("/login?type=doctor")} className="gap-2">
                             <Activity className="w-5 h-5" />
-                            Doctor Portal
+                            Portal de Profesionales
                         </Button>
                     </div>
                 </div>
@@ -74,8 +84,8 @@ export default function LandingPage() {
             {/* Features Section */}
             <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
                 <div className="text-center mb-12">
-                    <h2 className="text-3xl font-bold mb-3">Why Choose HealthConnect?</h2>
-                    <p className="text-slate-600 dark:text-slate-300">Experience healthcare that adapts to your lifestyle</p>
+                    <h2 className="text-3xl font-bold mb-3 dark:text-white text-primary">¿Por qué elegir Healthcare?</h2>
+                    <p className="text-slate-600 dark:text-slate-300">Atención médica que se adapta a tu rutina</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -87,7 +97,7 @@ export default function LandingPage() {
                             <div className="w-12 h-12 rounded-xl mb-4 flex items-center justify-center bg-gradient-to-br from-indigo-600 to-sky-500">
                                 <feature.icon className="w-6 h-6 text-white" />
                             </div>
-                            <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
+                            <h3 className="text-lg font-semibold mb-2 dark:text-sky-500 text-primary">{feature.title}</h3>
                             <p className="text-sm text-slate-600 dark:text-slate-300">{feature.description}</p>
                         </div>
                     ))}
@@ -96,19 +106,19 @@ export default function LandingPage() {
 
             {/* CTA Section */}
             <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
-                <div className="rounded-3xl p-12 text-center text-white bg-gradient-to-br from-indigo-600 to-sky-500 shadow-lg">
-                    <h2 className="text-3xl font-bold mb-4">Ready to Get Started?</h2>
-                    <p className="text-lg mb-8/ opacity-90">
-                        Join thousands of patients and healthcare providers using HealthConnect
+                <div className="rounded-3xl p-12 text-center text-white bg-gradient-to-br from-indigo-600 to-sky-500 shadow-lg flex flex-col justify-center items-center gap-3">
+                    <h2 className="text-3xl font-bold">¿Listo para empezar?</h2>
+                    <p className="text-lg opacity-90">
+                        Súmate a miles de pacientes y profesionales que ya usan HealthConnect.
                     </p>
-                    <Button size="lg" variant="secondary" onClick={() => navigate("/login")}>Create Your Account</Button>
+                    <Button size="lg" variant="secondary" onClick={() => navigate("/login")}>Crear mi cuenta</Button>
                 </div>
             </section>
 
             {/* Footer */}
             <footer className="border-t bg-white/70 dark:bg-slate-900/60 backdrop-blur">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center text-sm text-slate-600 dark:text-slate-400">
-                    <p>© {new Date().getFullYear()} HealthConnect. Your trusted telemedicine platform.</p>
+                    <p>© {new Date().getFullYear()} HealthConnect. Tu plataforma confiable de telemedicina.</p>
                 </div>
             </footer>
         </div>
