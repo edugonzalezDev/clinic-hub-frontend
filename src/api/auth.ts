@@ -1,17 +1,18 @@
-import { apiClient } from "@/libs/apiClient";
+import { apiClient } from "@/lib/apiClient";
 import type {
   User,
   LoginCredentials,
   CodeMfa,
-  RegisterData,
+  RegisterDataPatient,
 } from "@/types/domain";
 import { API_ENPOINTS } from "./enpoints";
 import type { StandardResponse } from "@/types/api";
 
 type AuthResponse = StandardResponse<User>;
-export type RegisterResponse = StandardResponse<{email: User['email']}>;
+export type RegisterResponse = StandardResponse<{ email: User["email"] }>;
 export const AuthService = {
-  reigister: async (data: RegisterData) => {
+  reigister: async (data: RegisterDataPatient) => {
+    console.log("esty en api/auth authservice.register");
     const response = await apiClient.post<RegisterResponse>(
       API_ENPOINTS.AUTH.REGISTER,
       data

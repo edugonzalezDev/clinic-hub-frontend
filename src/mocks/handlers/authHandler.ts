@@ -1,7 +1,8 @@
 import { http, HttpResponse } from "msw";
-import type { User } from "@/types/domain";
+import type { RegisterDataPatient, User } from "@/types/domain";
 import { API_ENPOINTS } from "@/api/enpoints";
 import type { RegisterResponse } from "@/api/auth";
+import { API_BASE_URL } from "@/lib/apiClient";
 
 const mockUser: User = {
   id: "1",
@@ -15,20 +16,49 @@ const mockUser: User = {
   isFirstLogin: false,
 };
 
+console.log(API_ENPOINTS.AUTH.REGISTER);
+const existingEmails = new Set(["existing@example.com"]);
+const existingDocuments = new Set(["12345678-9"]);
 export const authHandler = [
-  http.post(API_ENPOINTS.AUTH.REGISTER, async ({request}) => {
-    const body = await request.json()
-    console.log(body)
-    // respuesta exitosa
-    const response: RegisterResponse = {
-      success: true,
-      message: "User registered successfully",
-      data: {
-        email: mockUser.email,
-      },
+  http.post(
+    `${API_BASE_URL}${API_ENPOINTS.AUTH.REGISTER}`,
+    async ({ request }) => {
+      const body = (await request.json()) as RegisterDataPatient;
+      console.log("esty ejecutando el handler de msw");
+      console.log("--->", body);
+      // validacione correo ya existe
+      if (existingEmails.has(body.email)) {
+        const response: RegisterResponse = {
+          success: false,
+          message: "User already exists",
+          error: {
+            code: "AUTH_EMAIL_EXISTS",
+          },
+        };
+        return HttpResponse.json(response, { status: 409 });
+      }
+      // validacione documento ya existe
+      if (existingDocuments.has(body.document)) {
+        const response: RegisterResponse = {
+          success: false,
+          message: "User already exists",
+          error: {
+            code: "AUTH_DOCUMENT_EXISTS",
+          },
+        };
+        return HttpResponse.json(response, { status: 409 });
+      }
+      // respuesta exitosa
+      const response: RegisterResponse = {
+        success: true,
+        message: "User registered successfully",
+        data: {
+          email: mockUser.email,
+        },
+      };
+      return HttpResponse.json(response, { status: 201 });
     }
-    return HttpResponse.json(response,{status: 201});
-  }),
+  ),
   http.post(API_ENPOINTS.AUTH.LOGIN, () => {
     return HttpResponse.json({
       user: mockUser,

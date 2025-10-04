@@ -1,9 +1,9 @@
 export interface StandardResponse<T = undefined> {
   success: boolean;
   message: string;
-  data: T;
+  data?: T;
   error?: {
     code: string;
-    details: Record<string, unknown>;
+    details?: Record<string, unknown>;
   };
 }

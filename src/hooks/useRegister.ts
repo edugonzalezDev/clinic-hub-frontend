@@ -1,12 +1,12 @@
 import { AuthService } from "@/api/auth";
 import { useState } from "react";
-import type { RegisterData } from "@/types/domain";
+import type { RegisterDataPatient } from "@/types/domain";
 
 export const useRegister = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  const register = async (data: RegisterData) => {
+  const register = async (data: RegisterDataPatient) => {
     setIsLoading(true);
     try {
       const response = await AuthService.reigister(data);
