@@ -15,9 +15,9 @@ export default function RegisterPage() {
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors,isValid },
   } = useForm<RegisterDataPatient>({
-    mode: "onBlur",
+    mode: "all",
     resolver: zodResolver(registerPatientSchema),
   });
 
@@ -202,8 +202,8 @@ export default function RegisterPage() {
           </div>
           <Button
             type="submit"
-            disabled={isSubmitting}
-            className="w-full h-12 bg-sky-600 hover:bg-sky-700"
+            disabled={!isValid}
+            className="w-full h-12 bg-sky-600 hover:bg-sky-700 cursor-pointer"
           >
             Register
           </Button>

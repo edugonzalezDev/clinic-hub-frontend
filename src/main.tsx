@@ -25,7 +25,7 @@ enableMocking().then(() => {
     <React.StrictMode>
       <BrowserRouter>
         <Toaster />
-      <AppRoutes />
+        <AppRoutes />
       </BrowserRouter>
     </React.StrictMode>
   );
