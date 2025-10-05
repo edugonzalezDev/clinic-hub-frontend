@@ -18,8 +18,11 @@ type LoginForm = {
 
 
 type RegisterForm = {
-    name: string;
+    full_name: string;
     email: string;
+    phone: string;
+    sex: "masculino" | "femenino" | "otro";
+    date_of_bird: string;
     password: string;
     license?: string; // requerida solo si userType === "doctor"
 };
@@ -32,6 +35,13 @@ const emailRule = {
         message: "Formato de email inválido",
     },
 };
+const phoneRule = {
+    required: "El Numero es obligatorio",
+    pattern: {
+        value: /^[+()\s-]*\d[\d\s()-]{6,14}$/,
+        message: "Teléfono inválido",
+    }
+}
 
 const Login = () => {
     const navigate = useNavigate();
@@ -50,7 +60,17 @@ const Login = () => {
         register: registerReg,
         handleSubmit: handleSubmitReg,
         formState: { errors: errorsReg, isSubmitting: isSubmittingReg },
-    } = useForm<RegisterForm>({ defaultValues: { name: "", email: "", password: "", license: "" }, mode: "onSubmit" });
+    } = useForm<RegisterForm>({
+        defaultValues: {
+            full_name: "",
+            email: "",
+            phone: "",
+            sex: "masculino",
+            date_of_bird: "",
+            password: "",
+            license: "",
+        }, mode: "onSubmit"
+    });
 
     useEffect(() => {
         const type = searchParams.get("type");
@@ -61,7 +81,7 @@ const Login = () => {
     const fakeApi = (ok = true, ms = 600) => new Promise<void>((res, rej) => setTimeout(() => (ok ? res() : rej()), ms));
 
     // --- submit handlers ---
-    const onLogin = async (v: LoginForm) => {
+    const onLogin = async ({ email, password }: LoginForm) => {
         try {
             await fakeApi(true);
             toast.success(`Sesión iniciada como ${userType === "patient" ? "Paciente" : "Profesional"}`);
@@ -73,6 +93,15 @@ const Login = () => {
     };
 
     const onRegister = async (v: RegisterForm) => {
+        const today = new Date().toISOString().slice(0, 10);
+        if (!v.date_of_bird) {
+            toast.error("La decha de nacimiento es obligatoria.");
+            return;
+        }
+        if (v.date_of_bird > today) {
+            toast.error("La fecha de nacimiento no puede ser en el futuro.");
+            return;
+        }
         // validación condicional de matrícula si es doctor
         if (userType === "doctor" && (!v.license || v.license.trim().length < 4)) {
             toast.error("La matrícula profesional es obligatoria (mínimo 4 caracteres).");
@@ -180,10 +209,10 @@ const Login = () => {
                                         id="name"
                                         type="text"
                                         placeholder="Juan Pérez"
-                                        aria-invalid={!!errorsReg.name}
-                                        {...registerReg("name", { required: "El nombre es obligatorio" })}
+                                        aria-invalid={!!errorsReg.full_name}
+                                        {...registerReg("full_name", { required: "El nombre es obligatorio" })}
                                     />
-                                    {errorsReg.name && <p className="text-sm text-red-600">{errorsReg.name.message}</p>}
+                                    {errorsReg.full_name && <p className="text-sm text-red-600">{errorsReg.full_name.message}</p>}
                                 </div>
 
                                 <div className="space-y-2">
@@ -196,6 +225,48 @@ const Login = () => {
                                         {...registerReg("email", emailRule)}
                                     />
                                     {errorsReg.email && <p className="text-sm text-red-600">{errorsReg.email.message}</p>}
+                                </div>
+
+                                {/* añadir phone, sex, date_of_bird */}
+                                <div className="space-y-2">
+                                    <Label htmlFor="phone">Teléfono</Label>
+                                    <Input
+                                        id="phone"
+                                        type="tel"
+                                        placeholder="+54 9 11 1234-5678"
+                                        aria-invalid={!!errorsReg.phone}
+                                        {...registerReg("phone", phoneRule)}
+                                    />
+                                    {errorsReg.phone && <p className="text-sm text-red-600">{errorsReg.phone.message}</p>}
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="sex">Sexo</Label>
+                                    <select
+                                        id="sex"
+                                        className="input border-2 border-slate-200 rounded-md"
+                                        aria-invalid={!!errorsReg.sex}
+                                        {...registerReg("sex", { required: "Selecciona una opción" })}
+                                    >
+                                        <option value="male">Masculino</option>
+                                        <option value="female">Femenino</option>
+                                        <option value="other">Otro</option>
+                                    </select>
+                                    {errorsReg.sex && <p className="text-sm text-red-600">{errorsReg.sex.message as string}</p>}
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="dob">Fecha de nacimiento</Label>
+                                    <Input
+                                        id="dob"
+                                        type="date"
+                                        max={new Date().toISOString().slice(0, 10)}
+                                        aria-invalid={!!errorsReg.date_of_bird}
+                                        {...registerReg("date_of_bird", { required: "La fecha de nacimiento es obligatoria" })}
+                                    />
+                                    {errorsReg.date_of_bird && (
+                                        <p className="text-sm text-red-600">{errorsReg.date_of_bird.message as string}</p>
+                                    )}
                                 </div>
 
                                 <div className="space-y-2">
