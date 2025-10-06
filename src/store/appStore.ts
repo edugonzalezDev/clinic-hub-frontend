@@ -233,13 +233,23 @@ const useAppStore = create<AppState>()(
                 });
             },
 
-            logout: () => set({
-                currentUser: undefined,
-                accessToken: undefined,
-                refreshToken: undefined,
-                currentDoctorId: undefined,
-                currentPatientId: undefined,
-            }),
+            logout: async () => {
+                set({
+                    currentUser: undefined,
+                    currentDoctorId: undefined,
+                    currentPatientId: undefined,
+                    accessToken: undefined,
+                    refreshToken: undefined,
+                });
+
+                // borra el storage persistido en store
+                try {
+                    await useAppStore.persist?.clearStorage?.(); // disponible con zustand/persist
+                    await useAppStore.persist?.rehydrate?.();    // vuelve a cargar (seeds)
+                } catch {
+                    console.error("No se pudo borrar el storage persistido.");
+                }
+            },
 
             // ---- Negocio ----
             addAppointment: (a) => set({ appointments: [...get().appointments, a] }),
