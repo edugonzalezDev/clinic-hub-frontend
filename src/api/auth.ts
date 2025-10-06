@@ -8,29 +8,22 @@ import type {
 import { API_ENPOINTS } from "./enpoints";
 import type { StandardResponse } from "@/types/api";
 
-type AuthResponse = StandardResponse<User>;
+// Respuestas planas (una sola envoltura)
 export type RegisterResponse = StandardResponse<{ email: User["email"] }>;
+export type LoginResponse = StandardResponse<{ user: User; token: string; requireMfa?: boolean }>;
+export type VerifyMfaResponse = StandardResponse<{ user: User; token: string }>;
+
 export const AuthService = {
-  reigister: async (data: RegisterDataPatient) => {
-    console.log("esty en api/auth authservice.register");
-    const response = await apiClient.post<RegisterResponse>(
-      API_ENPOINTS.AUTH.REGISTER,
-      data
-    );
-    return response.data;
+  register: async (data: RegisterDataPatient) => {
+    const res = await apiClient.post<RegisterResponse>(API_ENPOINTS.AUTH.REGISTER, data);
+    return res.data;
   },
   login: async (credentials: LoginCredentials) => {
-    const response = await apiClient.post<StandardResponse<AuthResponse>>(
-      API_ENPOINTS.AUTH.LOGIN,
-      credentials
-    );
-    return response.data;
+    const res = await apiClient.post<LoginResponse>(API_ENPOINTS.AUTH.LOGIN, credentials);
+    return res.data;
   },
   verifyMfa: async (mfaData: CodeMfa) => {
-    const response = await apiClient.post<AuthResponse>(
-      API_ENPOINTS.AUTH.VERYIFYMFA,
-      mfaData
-    );
-    return response.data;
+    const res = await apiClient.post<VerifyMfaResponse>(API_ENPOINTS.AUTH.VERIFY_MFA, mfaData);
+    return res.data;
   },
 };

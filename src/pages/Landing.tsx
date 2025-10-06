@@ -8,31 +8,24 @@ export default function LandingPage() {
     const features = [
         {
             icon: Video,
-            // title: "Teleconsultation",
-            // description: "Connect with healthcare professionals through secure video calls",
             title: "Teleconsulta",
             description: "Conéctate con profesionales de la salud mediante videollamadas seguras.",
 
         },
         {
             icon: Calendar,
-            // title: "Easy Scheduling",
-            // description: "Book appointments at your convenience with instant confirmation",
             title: "Agenda fácil",
             description: "Reserva turnos cuando te convenga y recibe confirmación al instante.",
 
         },
         {
             icon: FileText,
-            // title: "Medical Records",
-            // description: "Access your complete medical history anytime, anywhere",
+
             title: "Historia clínica",
             description: "Accede a tu historial médico completo en cualquier momento y lugar.",
         },
         {
             icon: Shield,
-            // title: "Secure & Private",
-            // description: "Your health data is protected with enterprise-grade security",
             title: "Seguro y privado",
             description: "Tus datos de salud están protegidos con seguridad de nivel empresarial.",
         },
