@@ -9,6 +9,45 @@ export interface User { id: string; name: string; role: Role; email?: string; }
 export interface Doctor { id: string; name: string; specialty: string; color?: string; }
 export interface Patient { id: string; name: string; docId: string; phone?: string; notes?: string; }
 
+// 👇 Tipos de Historia Clínica
+export type Consultation = {
+    id: string;
+    dateISO: string;
+    doctorId: string;
+    specialty: string;
+    diagnosis: string;
+    notes: string;
+};
+export type Medication = {
+    id: string;
+    name: string;
+    dosage: string;
+    frequency: string;
+    status: "active" | "suspended" | "completed";
+};
+export type LabResult = {
+    id: string;
+    test: string;
+    dateISO: string;
+    result: string;
+    status: "pending" | "complete";
+};
+export type Vital = {
+    id: string;
+    metric: string;
+    value: string;
+    dateISO: string;
+    status?: string;
+};
+
+export type ClinicalRecord = {
+    consultations: Consultation[];
+    medications: Medication[];
+    labs: LabResult[];
+    vitals: Vital[];
+};
+
+
 export interface Appointment {
     id: string;
     doctorId: string;
@@ -76,6 +115,12 @@ interface AppState {
     // negocio
     addAppointment: (a: Appointment) => void;
     moveWaitlist: (from: number, to: number) => void;
+
+    // historia clínica por paciente
+    clinicalRecords: Record<string, ClinicalRecord>;
+
+    // acciones HC (mínimas por ahora)
+    upsertClinicalRecord: (patientId: string, patch: Partial<ClinicalRecord>) => void;
 }
 
 /** Seeds demo */
@@ -119,6 +164,83 @@ const seedUsers: AuthUser[] = [
     },
 ];
 
+const seedClinical: Record<string, ClinicalRecord> = {
+    p1: {
+        consultations: [
+            {
+                id: "c1",
+                dateISO: "2024-01-15",
+                doctorId: "d1",
+                specialty: "Cardiología",
+                diagnosis: "Chequeo anual - Todo OK",
+                notes: "Buen estado cardiovascular. Mantener estilo de vida.",
+            },
+            {
+                id: "c2",
+                dateISO: "2023-12-10",
+                doctorId: "d2",
+                specialty: "Clínica",
+                diagnosis: "Resfrío común",
+                notes: "Reposo e hidratación.",
+            },
+        ],
+        medications: [
+            { id: "m1", name: "Lisinopril", dosage: "10 mg", frequency: "1 vez al día", status: "active" },
+            { id: "m2", name: "Aspirina", dosage: "81 mg", frequency: "1 vez al día", status: "active" },
+        ],
+        labs: [
+            { id: "l1", test: "Hemograma", dateISO: "2024-01-10", result: "Normal", status: "complete" },
+            { id: "l2", test: "Perfil lipídico", dateISO: "2024-01-10", result: "Normal", status: "complete" },
+        ],
+        vitals: [
+            { id: "v1", metric: "TA", value: "120/80 mmHg", dateISO: "2024-01-15", status: "Normal" },
+            { id: "v2", metric: "FC", value: "72 lpm", dateISO: "2024-01-15", status: "Normal" },
+            { id: "v3", metric: "Peso", value: "75 kg", dateISO: "2024-01-15", status: "Normal" },
+        ],
+    },
+    p2: {
+        consultations: [
+            {
+                id: "c3",
+                dateISO: "2024-01-20",
+                doctorId: "XX",
+                specialty: "Ginecología",
+                diagnosis: "Examen de rutina",
+                notes: "Buen estado general. Mantener estilo de vida.",
+            },
+            {
+                id: "c4",
+                dateISO: "2024-01-18",
+                doctorId: "XX",
+                specialty: "Clínica",
+                diagnosis: "Resfrío común",
+                notes: "Reposo e hidratación.",
+            },
+            {
+                id: "c5",
+                dateISO: "2024-01-17",
+                doctorId: "XX",
+                specialty: "Clínica",
+                diagnosis: "Resfrío común",
+                notes: "Reposo e hidratación.",
+            },
+        ],
+        medications: [
+            { id: "m3", name: "Lisinopril", dosage: "10 mg", frequency: "1 vez al día", status: "active" },
+            { id: "m4", name: "Aspirina", dosage: "81 mg", frequency: "1 vez al día", status: "active" },
+        ],
+        labs: [
+            { id: "l3", test: "Hemograma", dateISO: "2024-01-10", result: "Normal", status: "complete" },
+            { id: "l4", test: "Perfil lipídico", dateISO: "2024-01-10", result: "Normal", status: "complete" },
+        ],
+        vitals: [
+            { id: "v4", metric: "TA", value: "120/80 mmHg", dateISO: "2024-01-15", status: "Normal" },
+            { id: "v5", metric: "FC", value: "72 lpm", dateISO: "2024-01-15", status: "Normal" },
+            { id: "v6", metric: "Peso", value: "75 kg", dateISO: "2024-01-15", status: "Normal" },
+        ],
+    }
+};
+
 const useAppStore = create<AppState>()(
     persist(
         (set, get) => ({
@@ -135,6 +257,8 @@ const useAppStore = create<AppState>()(
             patients: seedPatients,
             appointments: seedAppointments,
             waitlist: [{ id: "w1", patientId: "p2", reason: "Consulta prioritaria" }],
+
+            clinicalRecords: seedClinical,
 
             // ---- Acciones de sesión ----
             register: (p) => {
@@ -260,6 +384,22 @@ const useAppStore = create<AppState>()(
                 items.splice(to, 0, moved);
                 return { waitlist: items };
             }),
+
+            upsertClinicalRecord: (patientId, patch) => {
+                const cur = get().clinicalRecords[patientId] ?? { consultations: [], medications: [], labs: [], vitals: [] };
+                set({
+                    clinicalRecords: {
+                        ...get().clinicalRecords,
+                        [patientId]: {
+                            consultations: patch.consultations ?? cur.consultations,
+                            medications: patch.medications ?? cur.medications,
+                            labs: patch.labs ?? cur.labs,
+                            vitals: patch.vitals ?? cur.vitals,
+                        },
+                    },
+                });
+            },
+
         }),
         {
             name: "hc/app-store",
@@ -276,6 +416,7 @@ const useAppStore = create<AppState>()(
                 doctors: s.doctors,
                 patients: s.patients,
                 appointments: s.appointments,
+                clinicalRecords: s.clinicalRecords,
             }),
             migrate: (persisted, _version) => persisted as AppState,
         }

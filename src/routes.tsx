@@ -7,6 +7,7 @@ import DoctorDashboard from "./pages/DoctorDashboard";
 import useAppStore from "./store/appStore";
 import type { PropsWithChildren } from "react";
 import { Outdent } from "lucide-react";
+import MedicalHistoryPage from "./features/medical/MedicalHistoryPage";
 
 function RequireAuth({ children }: PropsWithChildren) {
   const user = useAppStore((s) => s.currentUser);
@@ -44,6 +45,7 @@ export default function AppRoutes() {
 
       {/* protegidas */}
       <Route element={<RequireAuth><Outdent /></RequireAuth>} />
+      <Route path="/patients/:id" element={<MedicalHistoryPage />} />
 
       {/* Doctor */}
       <Route path="/doctor" element={<DoctorDashboard />} />
