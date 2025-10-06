@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Activity, UserCircle, Stethoscope, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
+import useAppStore from "@/store/appStore";
 
 type UserType = "patient" | "doctor";
 
@@ -16,17 +17,16 @@ type LoginForm = {
     password: string;
 };
 
-
 type RegisterForm = {
     full_name: string;
     email: string;
     phone: string;
+    dni: string;
     sex: "masculino" | "femenino" | "otro";
     date_of_bird: string;
     password: string;
     license?: string; // requerida solo si userType === "doctor"
 };
-
 
 const emailRule = {
     required: "El email es obligatorio",
@@ -36,12 +36,19 @@ const emailRule = {
     },
 };
 const phoneRule = {
-    required: "El Numero es obligatorio",
+    required: "El teléfono es obligatorio",
     pattern: {
         value: /^[+()\s-]*\d[\d\s()-]{6,14}$/,
         message: "Teléfono inválido",
-    }
-}
+    },
+};
+const dniRule = {
+    required: "El DNI es obligatorio",
+    pattern: {
+        value: /^[0-9]{8}$/,
+        message: "DNI inválido, ingrese solo 8 números",
+    },
+};
 
 const Login = () => {
     const navigate = useNavigate();
@@ -49,7 +56,10 @@ const Login = () => {
     const [isLogin, setIsLogin] = useState(true);
     const [userType, setUserType] = useState<UserType>("patient");
 
-    // RHF: un form para login y otro para registro
+    const loginWithPassword = useAppStore(s => s.loginWithPassword);
+    const registerLocal = useAppStore(s => s.register);
+
+    // RHF
     const {
         register: registerLogin,
         handleSubmit: handleSubmitLogin,
@@ -65,11 +75,13 @@ const Login = () => {
             full_name: "",
             email: "",
             phone: "",
+            dni: "",
             sex: "masculino",
             date_of_bird: "",
             password: "",
             license: "",
-        }, mode: "onSubmit"
+        },
+        mode: "onSubmit",
     });
 
     useEffect(() => {
@@ -77,43 +89,49 @@ const Login = () => {
         if (type === "doctor" || type === "patient") setUserType(type);
     }, [searchParams]);
 
-    // Mock API
-    const fakeApi = (ok = true, ms = 600) => new Promise<void>((res, rej) => setTimeout(() => (ok ? res() : rej()), ms));
-
     // --- submit handlers ---
     const onLogin = async ({ email, password }: LoginForm) => {
-        try {
-            await fakeApi(true);
-            toast.success(`Sesión iniciada como ${userType === "patient" ? "Paciente" : "Profesional"}`);
-            // de momento navegamos directo a las rutas por tipo
-            navigate(userType === "patient" ? "/patient" : "/doctor", { replace: true });
-        } catch {
-            toast.error("No se pudo iniciar sesión. Intenta de nuevo.");
+        const res = loginWithPassword(email, password);
+        if (!res.ok) {
+            toast.error(res.error);
+            return;
         }
+        toast.success(`Sesión iniciada como ${userType === "patient" ? "Paciente" : "Profesional"}`);
+        navigate(userType === "patient" ? "/patient" : "/doctor", { replace: true });
     };
 
     const onRegister = async (v: RegisterForm) => {
+        // validaciones extra por fecha
         const today = new Date().toISOString().slice(0, 10);
-        if (!v.date_of_bird) {
-            toast.error("La decha de nacimiento es obligatoria.");
-            return;
-        }
-        if (v.date_of_bird > today) {
-            toast.error("La fecha de nacimiento no puede ser en el futuro.");
-            return;
-        }
-        // validación condicional de matrícula si es doctor
+        if (!v.date_of_bird) return toast.error("La fecha de nacimiento es obligatoria.");
+        if (v.date_of_bird > today) return toast.error("La fecha de nacimiento no puede ser futura.");
+        if (v.date_of_bird.slice(0, 4) < "1900") return toast.error("La fecha de nacimiento no puede ser antes de 1900.");
+
+        // matrícula si es doctor
         if (userType === "doctor" && (!v.license || v.license.trim().length < 4)) {
             toast.error("La matrícula profesional es obligatoria (mínimo 4 caracteres).");
             return;
         }
-        try {
-            await fakeApi(true);
-            toast.success(`Cuenta creada como ${userType === "patient" ? "Paciente" : "Profesional"}`);
-            navigate(userType === "patient" ? "/patient" : "/doctor", { replace: true });
-        } catch {
-            toast.error("No se pudo crear la cuenta. Intenta de nuevo.");
+
+        const res = registerLocal({
+            role: userType,
+            full_name: v.full_name,
+            email: v.email,
+            password: v.password,
+            phone: v.phone,
+            dni: v.dni,
+            sex: v.sex,
+            date_of_bird: v.date_of_bird,
+            license: v.license,
+        });
+
+        if (!res.ok) {
+            toast.error(res.error);
+            return;
         }
+
+        toast.success(`Cuenta creada como ${userType === "patient" ? "Paciente" : "Profesional"}`);
+        navigate(userType === "patient" ? "/patient" : "/doctor", { replace: true });
     };
 
     return (
@@ -204,9 +222,9 @@ const Login = () => {
                         <TabsContent value="register" className="space-y-4">
                             <form onSubmit={handleSubmitReg(onRegister)} className="space-y-4" noValidate>
                                 <div className="space-y-2">
-                                    <Label htmlFor="name">Nombre completo</Label>
+                                    <Label htmlFor="full_name">Nombre completo</Label>
                                     <Input
-                                        id="name"
+                                        id="full_name"
                                         type="text"
                                         placeholder="Juan Pérez"
                                         aria-invalid={!!errorsReg.full_name}
@@ -227,7 +245,6 @@ const Login = () => {
                                     {errorsReg.email && <p className="text-sm text-red-600">{errorsReg.email.message}</p>}
                                 </div>
 
-                                {/* añadir phone, sex, date_of_bird */}
                                 <div className="space-y-2">
                                     <Label htmlFor="phone">Teléfono</Label>
                                     <Input
@@ -241,6 +258,18 @@ const Login = () => {
                                 </div>
 
                                 <div className="space-y-2">
+                                    <Label htmlFor="dni">DNI</Label>
+                                    <Input
+                                        id="dni"
+                                        type="text"
+                                        placeholder="12345678"
+                                        aria-invalid={!!errorsReg.dni}
+                                        {...registerReg("dni", dniRule)}
+                                    />
+                                    {errorsReg.dni && <p className="text-sm text-red-600">{errorsReg.dni.message}</p>}
+                                </div>
+
+                                <div className="space-y-2">
                                     <Label htmlFor="sex">Sexo</Label>
                                     <select
                                         id="sex"
@@ -248,9 +277,9 @@ const Login = () => {
                                         aria-invalid={!!errorsReg.sex}
                                         {...registerReg("sex", { required: "Selecciona una opción" })}
                                     >
-                                        <option value="male">Masculino</option>
-                                        <option value="female">Femenino</option>
-                                        <option value="other">Otro</option>
+                                        <option value="masculino">Masculino</option>
+                                        <option value="femenino">Femenino</option>
+                                        <option value="otro">Otro</option>
                                     </select>
                                     {errorsReg.sex && <p className="text-sm text-red-600">{errorsReg.sex.message as string}</p>}
                                 </div>
@@ -293,8 +322,8 @@ const Login = () => {
                                             placeholder="MP 123456"
                                             aria-invalid={!!errorsReg.license}
                                             {...registerReg("license", {
-                                                required: userType === "doctor" ? "La matrícula es obligatoria" : false,
-                                                minLength: userType === "doctor" ? { value: 4, message: "Mínimo 4 caracteres" } : undefined,
+                                                required: "La matrícula es obligatoria",
+                                                minLength: { value: 4, message: "Mínimo 4 caracteres" },
                                             })}
                                         />
                                         {errorsReg.license && <p className="text-sm text-red-600">{errorsReg.license.message}</p>}
@@ -302,7 +331,9 @@ const Login = () => {
                                 )}
 
                                 <Button type="submit" className="w-full" size="lg" disabled={isSubmittingReg}>
-                                    {isSubmittingReg ? "Creando cuenta…" : `Registrarme como ${userType === "patient" ? "Paciente" : "Profesional"}`}
+                                    {isSubmittingReg
+                                        ? "Creando cuenta…"
+                                        : `Registrarme como ${userType === "patient" ? "Paciente" : "Profesional"}`}
                                 </Button>
                             </form>
                         </TabsContent>

@@ -4,6 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar, Video, FileText, Users, LogOut, Activity, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import { useDndOrder } from "@/hooks/useDndOrder"; // <— nuevo
+
 import useAppStore from "@/store/appStore";
 
 function isSameDay(a: Date, b: Date) {
@@ -37,6 +40,17 @@ const DoctorDashboard = () => {
             .sort((a, b) => +new Date(a.startsAt) - +new Date(b.startsAt));
     }, [appointments, doctorId]);
 
+    const storageKey = useMemo(
+        () => `agenda:${doctorId}:${new Date().toDateString()}`,
+        [doctorId]
+    );
+
+    const { ordered: orderedAppts, onDragEnd } = useDndOrder(
+        todayAppts,
+        (a) => a.id,
+        storageKey
+    );
+
     const stats = [
         { label: "Turnos de hoy", value: String(todayAppts.length), icon: Calendar, color: "text-primary" },
         { label: "Notas pendientes", value: "3", icon: FileText, color: "text-yellow-600" },
@@ -58,7 +72,7 @@ const DoctorDashboard = () => {
             <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
                 <div className="container mx-auto px-4 py-4 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-primary rounded-xl flex items-center justify-center">
+                        <div className="w-10 h-10 bg-gradient-primary rounded-xl flex items-center justify-center my-gradient-class">
                             <Activity className="w-5 h-5 text-white" />
                         </div>
                         <div>
@@ -74,7 +88,7 @@ const DoctorDashboard = () => {
                             navigate("/", { replace: true });
                         }}
                     >
-                        <LogOut className="w-4 h-4 mr-2" />
+                        <LogOut className="w-4 h-4 mr-2 " />
                         Cerrar sesión
                     </Button>
                 </div>
@@ -101,7 +115,7 @@ const DoctorDashboard = () => {
                                         <p className="text-sm text-muted-foreground">{stat.label}</p>
                                         <h3 className="text-3xl font-bold mt-1">{stat.value}</h3>
                                     </div>
-                                    <div className={`w-12 h-12 rounded-xl bg-gradient-primary flex items-center justify-center ${stat.color}`}>
+                                    <div className={`my-gradient-class w-12 h-12 rounded-xl bg-gradient-primary flex items-center justify-center ${stat.color}`}>
                                         <stat.icon className="w-6 h-6 text-white" />
                                     </div>
                                 </div>
@@ -123,49 +137,77 @@ const DoctorDashboard = () => {
                             </CardHeader>
 
                             <CardContent className="space-y-4">
-                                {todayAppts.length === 0 && (
+                                {orderedAppts.length === 0 && (
                                     <p className="text-sm text-muted-foreground">No hay turnos para hoy.</p>
                                 )}
 
-                                {todayAppts.map((a) => {
-                                    const p = patients.find((x) => x.id === a.patientId);
-                                    const start = new Date(a.startsAt);
-                                    const typeLabel = a.type === "virtual" ? "Teleconsulta" : "Presencial";
-                                    return (
-                                        <div
-                                            key={a.id}
-                                            className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/5 transition-colors"
-                                        >
-                                            <div className="space-y-1 flex-1">
-                                                <div className="flex items-center gap-2">
-                                                    <h4 className="font-semibold">{p?.name || "Paciente"}</h4>
-                                                    {statusBadge(a.status)}
-                                                </div>
-                                                <p className="text-sm text-muted-foreground">
-                                                    {hhmm(start)} • {typeLabel}
-                                                </p>
-                                                {p?.docId && <p className="text-xs text-muted-foreground">Doc: {p.docId}</p>}
-                                            </div>
+                                <DragDropContext onDragEnd={onDragEnd}>
+                                    <Droppable droppableId="todayAppts">
+                                        {(dropProvided) => (
+                                            <div ref={dropProvided.innerRef} {...dropProvided.droppableProps} className="space-y-3">
+                                                {orderedAppts.map((a, index) => {
+                                                    const p = patients.find((x) => x.id === a.patientId);
+                                                    const start = new Date(a.startsAt);
+                                                    const typeLabel = a.type === "virtual" ? "Teleconsulta" : "Presencial";
 
-                                            <div className="flex gap-2">
-                                                {a.type === "virtual" && a.status !== "cancelled" && (
-                                                    <Button size="sm" onClick={() => navigate(`/televisit/${a.id}`)}>
-                                                        <Video className="w-4 h-4 mr-2" />
-                                                        Iniciar
-                                                    </Button>
-                                                )}
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    onClick={() => navigate(`/patients/${p?.id ?? ""}`)}
-                                                >
-                                                    <FileText className="w-4 h-4 mr-2" />
-                                                    Historia
-                                                </Button>
+                                                    return (
+                                                        <Draggable draggableId={a.id} index={index} key={a.id}>
+                                                            {(dragProvided, snapshot) => (
+                                                                <div
+                                                                    ref={dragProvided.innerRef}
+                                                                    {...dragProvided.draggableProps}
+                                                                    className={`flex items-center justify-between p-4 rounded-lg border bg-card transition-colors
+                                ${snapshot.isDragging ? "ring-2 ring-primary/50 bg-accent/20" : "hover:bg-accent/5"}`}
+                                                                >
+                                                                    {/* “manija” de arrastre: podés moverla a un icono si querés */}
+                                                                    <div
+                                                                        {...dragProvided.dragHandleProps}
+                                                                        className="cursor-grab active:cursor-grabbing select-none mr-3 text-slate-400"
+                                                                        title="Arrastrar para reordenar"
+                                                                        aria-label="Arrastrar para reordenar"
+                                                                    >
+                                                                        ⠿
+                                                                    </div>
+
+                                                                    <div className="space-y-1 flex-1">
+                                                                        <div className="flex items-center gap-2">
+                                                                            <h4 className="font-semibold">{p?.name || "Paciente"}</h4>
+                                                                            {statusBadge(a.status)}
+                                                                        </div>
+                                                                        <p className="text-sm text-muted-foreground">
+                                                                            {hhmm(start)} • {typeLabel}
+                                                                        </p>
+                                                                        {p?.docId && (
+                                                                            <p className="text-xs text-muted-foreground">Doc: {p.docId}</p>
+                                                                        )}
+                                                                    </div>
+
+                                                                    <div className="flex gap-2">
+                                                                        {a.type === "virtual" && a.status !== "cancelled" && (
+                                                                            <Button size="sm" onClick={() => navigate(`/televisit/${a.id}`)}>
+                                                                                <Video className="w-4 h-4 mr-2" />
+                                                                                Iniciar
+                                                                            </Button>
+                                                                        )}
+                                                                        <Button
+                                                                            variant="outline"
+                                                                            size="sm"
+                                                                            onClick={() => navigate(`/patients/${p?.id ?? ""}`)}
+                                                                        >
+                                                                            <FileText className="w-4 h-4 mr-2" />
+                                                                            Historia
+                                                                        </Button>
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                        </Draggable>
+                                                    );
+                                                })}
+                                                {dropProvided.placeholder}
                                             </div>
-                                        </div>
-                                    );
-                                })}
+                                        )}
+                                    </Droppable>
+                                </DragDropContext>
                             </CardContent>
                         </Card>
                     </div>

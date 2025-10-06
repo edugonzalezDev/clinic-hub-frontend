@@ -19,37 +19,61 @@ export interface Appointment {
     status: "pending" | "confirmed" | "cancelled";
 }
 
+/** Usuario “auth” (solo mock) */
 export interface AuthUser {
     id: string;
     name: string;
     role: Role;
     email: string;
-    password: string; // ⚠️ solo mock (plaintext)
+    password: string;        // ⚠️ solo mock (plaintext)
+    dni?: string;
+    phone?: string;
+    sex?: string;
+    date_of_bird?: string;
+    license?: string;
     linkedPatientId?: string;
     linkedDoctorId?: string;
 }
+
 /** Estado + acciones */
 interface AppState {
     // sesión
     currentUser?: User;
     currentPatientId?: string;
     currentDoctorId?: string;
-    accessToken?: string;   // para cuando conectes API
+    accessToken?: string;
     refreshToken?: string;
 
-    // datos mock (hoy locales; mañana desde API)
+    // “BD” mock
+    users: AuthUser[];
     doctors: Doctor[];
     patients: Patient[];
     appointments: Appointment[];
     waitlist: { id: string; patientId: string; reason?: string }[];
 
     // acciones de sesión
-    register: (p: { name: string; email: string; password: string; role: Role; phone: string, sex: string, date_of_bird: string, license?: string }) => { ok: boolean; error?: string };
+    /** Registro + login automático (mock) */
+    register: (p: {
+        role: Role;
+        full_name: string;
+        email: string;
+        password: string;
+        phone: string;
+        dni: string;
+        sex: string;
+        date_of_bird: string;
+        license?: string;
+    }) => { ok: true } | { ok: false; error: string };
 
+    /** Login por email/password (mock) */
+    loginWithPassword: (email: string, password: string) => { ok: true } | { ok: false; error: string };
+
+    /** Setter de sesión “crudo” (útil si después conectás API real) */
     login: (p: { user: User; accessToken?: string; refreshToken?: string; linkedPatientId?: string; linkedDoctorId?: string }) => void;
+
     logout: () => void;
 
-    // acciones de negocio
+    // negocio
     addAppointment: (a: Appointment) => void;
     moveWaitlist: (from: number, to: number) => void;
 }
@@ -59,22 +83,12 @@ const seedDoctors: Doctor[] = [
     { id: "d1", name: "Dra. Sofía Pérez", specialty: "Clínica", color: "#A7D8F0" },
     { id: "d2", name: "Dr. Martín Gómez", specialty: "Pediatría", color: "#BEE7C8" },
     { id: "d3", name: "Dra. Laura Martínez", specialty: "Ginecología", color: "#FAD2CF" },
-    { id: "d4", name: "Dr. Carlos Rodríguez", specialty: "Cardiología", color: "#F0E1D8" },
-    { id: "d5", name: "Dra. Ana Díaz", specialty: "Dermatología", color: "#E7D8F0" },
 ];
 const seedPatients: Patient[] = [
     { id: "p1", name: "Juan Ramírez", docId: "34.567.890", phone: "+54 9 294 123", notes: "Alergia a penicilina" },
     { id: "p2", name: "Ana Díaz", docId: "29.111.222" },
     { id: "p3", name: "Carlos Rodríguez", docId: "XX.333.444" },
-    { id: "p4", name: "Laura Martínez", docId: "XX.555.666" },
-    { id: "p5", name: "Sofía Pérez", docId: "XX.777.888" },
-    { id: "p6", name: "Martín Gómez", docId: "XX.999.000" },
-    { id: "p7", name: "Laura Díaz", docId: "XX.111.222" },
-    { id: "p8", name: "Carlos Martínez", docId: "XX.333.444" },
-    { id: "p9", name: "Ana Rodríguez", docId: "XX.555.666" },
-    { id: "p10", name: "Sofía Pérez", docId: "XX.777.888" },
 ];
-
 const seedAppointments: Appointment[] = [
     {
         id: "a1",
@@ -85,41 +99,23 @@ const seedAppointments: Appointment[] = [
         type: "virtual",
         status: "confirmed",
     },
+];
+const seedUsers: AuthUser[] = [
     {
-        id: "a2",
-        doctorId: "d2",
-        patientId: "p3",
-        startsAt: addMinutes(new Date(), 30).toISOString(),
-        endsAt: addMinutes(new Date(), 60).toISOString(),
-        type: "presencial",
-        status: "confirmed",
+        id: "u-doc",
+        name: "Dra. Sofía Pérez",
+        role: "doctor",
+        email: "sofia@demo.com",
+        password: "123456",
+        linkedDoctorId: "d1",
     },
     {
-        id: "a3",
-        doctorId: "d2",
-        patientId: "p10",
-        startsAt: addMinutes(new Date(), 60).toISOString(),
-        endsAt: addMinutes(new Date(), 90).toISOString(),
-        type: "virtual",
-        status: "confirmed",
-    },
-    {
-        id: "a4",
-        doctorId: "d1",
-        patientId: "p5",
-        startsAt: addMinutes(new Date(), 90).toISOString(),
-        endsAt: addMinutes(new Date(), 120).toISOString(),
-        type: "presencial",
-        status: "confirmed",
-    },
-    {
-        id: "a5",
-        doctorId: "d1",
-        patientId: "p7",
-        startsAt: addMinutes(new Date(), 120).toISOString(),
-        endsAt: addMinutes(new Date(), 150).toISOString(),
-        type: "virtual",
-        status: "confirmed",
+        id: "u-pat",
+        name: "Juan Ramírez",
+        role: "patient",
+        email: "juan@demo.com",
+        password: "123456",
+        linkedPatientId: "p1",
     },
 ];
 
@@ -134,13 +130,99 @@ const useAppStore = create<AppState>()(
             refreshToken: undefined,
 
             // datos
+            users: seedUsers,
             doctors: seedDoctors,
             patients: seedPatients,
             appointments: seedAppointments,
             waitlist: [{ id: "w1", patientId: "p2", reason: "Consulta prioritaria" }],
 
             // ---- Acciones de sesión ----
-            register: ({ name, email, password, role }) => { },
+            register: (p) => {
+                const { email, dni, full_name, role } = p;
+                const { users, patients, doctors } = get();
+
+                // unicidad email
+                if (users.some(u => u.email.toLowerCase() === email.toLowerCase())) {
+                    return { ok: false as const, error: "El email ya está registrado." };
+                }
+                // unicidad DNI (si viene)
+                if (dni && (users.some(u => u.dni === dni) || patients.some(pt => pt.docId.replace(/\D/g, "") === dni))) {
+                    return { ok: false as const, error: "El DNI ya está registrado." };
+                }
+
+                // crear entidades vinculadas
+                let linkedPatientId: string | undefined;
+                let linkedDoctorId: string | undefined;
+
+                if (role === "patient") {
+                    linkedPatientId = `p-${crypto.randomUUID()}`;
+                    const newPatient: Patient = {
+                        id: linkedPatientId,
+                        name: full_name,
+                        docId: dni || "S/D",
+                        phone: p.phone,
+                        notes: "",
+                    };
+                    set({ patients: [...patients, newPatient] });
+                }
+
+                if (role === "doctor") {
+                    linkedDoctorId = `d-${crypto.randomUUID()}`;
+                    const newDoctor: Doctor = {
+                        id: linkedDoctorId,
+                        name: full_name,
+                        specialty: "Clínica",
+                        color: "#A7D8F0",
+                    };
+                    set({ doctors: [...doctors, newDoctor] });
+                }
+
+                // crear auth user
+                const newAuthUser: AuthUser = {
+                    id: crypto.randomUUID(),
+                    name: full_name,
+                    role,
+                    email: p.email,
+                    password: p.password,
+                    dni: p.dni,
+                    phone: p.phone,
+                    sex: p.sex,
+                    date_of_bird: p.date_of_bird,
+                    license: p.license,
+                    linkedPatientId,
+                    linkedDoctorId,
+                };
+
+                set({ users: [...get().users, newAuthUser] });
+
+                // login automático
+                set({
+                    currentUser: { id: newAuthUser.id, name: newAuthUser.name, role: newAuthUser.role, email: newAuthUser.email },
+                    currentDoctorId: newAuthUser.linkedDoctorId,
+                    currentPatientId: newAuthUser.linkedPatientId,
+                    accessToken: "mock.access.token",
+                    refreshToken: "mock.refresh.token",
+                });
+
+                return { ok: true as const };
+            },
+
+            loginWithPassword: (email, password) => {
+                const u = get().users.find(
+                    x => x.email.toLowerCase() === email.toLowerCase() && x.password === password
+                );
+                if (!u) return { ok: false as const, error: "Credenciales inválidas." };
+
+                set({
+                    currentUser: { id: u.id, name: u.name, role: u.role, email: u.email },
+                    currentDoctorId: u.linkedDoctorId,
+                    currentPatientId: u.linkedPatientId,
+                    accessToken: "mock.access.token",
+                    refreshToken: "mock.refresh.token",
+                });
+                return { ok: true as const };
+            },
+
             login: ({ user, accessToken, refreshToken, linkedDoctorId, linkedPatientId }) => {
                 set({
                     currentUser: user,
@@ -159,7 +241,7 @@ const useAppStore = create<AppState>()(
                 currentPatientId: undefined,
             }),
 
-            // ---- Acciones de negocio ----
+            // ---- Negocio ----
             addAppointment: (a) => set({ appointments: [...get().appointments, a] }),
 
             moveWaitlist: (from, to) => set((s) => {
@@ -170,18 +252,20 @@ const useAppStore = create<AppState>()(
             }),
         }),
         {
-            name: "hc/app-store",                 // key en localStorage
+            name: "hc/app-store",
             version: 1,
             storage: createJSONStorage(() => localStorage),
-            /** Persistimos sólo lo necesario para sesión/UX.
-             *  Los catálogos (doctores/pacientes) idealmente vendrán de API. */
+            /** Persistimos también users/doctores/pacientes para que el registro quede guardado. */
             partialize: (s) => ({
                 currentUser: s.currentUser,
                 currentPatientId: s.currentPatientId,
                 currentDoctorId: s.currentDoctorId,
                 accessToken: s.accessToken,
                 refreshToken: s.refreshToken,
-                appointments: s.appointments, // las mantenemos al recargar por demo
+                users: s.users,
+                doctors: s.doctors,
+                patients: s.patients,
+                appointments: s.appointments,
             }),
             migrate: (persisted, _version) => persisted as AppState,
         }
