@@ -17,7 +17,7 @@ export function LabsList({ items }: { items: LabResult[] }) {
                     <CardContent className="pt-6">
                         <div className="flex items-start justify-between">
                             <div className="flex gap-3">
-                                <div className="w-12 h-12 rounded-xl bg-gradient-secondary flex items-center justify-center">
+                                <div className="my-gradient-class w-12 h-12 rounded-xl bg-gradient-secondary flex items-center justify-center">
                                     <TestTube className="w-6 h-6 text-white" />
                                 </div>
                                 <div>

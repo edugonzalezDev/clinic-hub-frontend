@@ -17,7 +17,7 @@ export function MedicationsList({ items }: { items: Medication[] }) {
                     <CardContent className="pt-6">
                         <div className="flex items-start justify-between">
                             <div className="flex gap-3">
-                                <div className="w-12 h-12 rounded-xl my-gradient-class flex items-center justify-center">
+                                <div className="w-12 h-12 rounded-xl  my-gradient-class flex items-center justify-center">
                                     <Pill className="w-6 h-6 text-white" />
                                 </div>
                                 <div>
