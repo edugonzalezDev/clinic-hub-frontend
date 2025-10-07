@@ -195,7 +195,7 @@ const DoctorDashboard = () => {
                                                                             onClick={() => navigate(`/patients/${p?.id ?? ""}`)}
                                                                         >
                                                                             <FileText className="w-4 h-4 mr-2" />
-                                                                            Historia
+                                                                            historia
                                                                         </Button>
                                                                     </div>
                                                                 </div>
