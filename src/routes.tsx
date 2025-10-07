@@ -8,6 +8,7 @@ import useAppStore from "./store/appStore";
 import type { PropsWithChildren } from "react";
 import { Outdent } from "lucide-react";
 import MedicalHistoryPage from "./features/medical/MedicalHistoryPage";
+import PacienteDashboard from "./features/patient/pages/PatientDashboard";
 
 function RequireAuth({ children }: PropsWithChildren) {
   const user = useAppStore((s) => s.currentUser);
@@ -20,10 +21,14 @@ function RoleHome() {
   const user = useAppStore((s) => s.currentUser);
   if (!user) return <Navigate to="/login" replace />;
   switch (user.role) {
-    case "doctor": return <Navigate to="/doctor" replace />;
-    case "patient": return <Navigate to="/patient" replace />;
-    case "admin": return <Navigate to="/admin" replace />;
-    default: return <Navigate to="/login" replace />;
+    case "doctor":
+      return <Navigate to="/doctor" replace />;
+    case "patient":
+      return <Navigate to="/patient" replace />;
+    case "admin":
+      return <Navigate to="/admin" replace />;
+    default:
+      return <Navigate to="/login" replace />;
   }
 }
 
@@ -33,7 +38,6 @@ function HomeGate() {
   return user ? <RoleHome /> : <LandingPage />;
 }
 
-
 export default function AppRoutes() {
   return (
     <Routes>
@@ -42,23 +46,26 @@ export default function AppRoutes() {
       <Route path="/select-user-type" element={<SelectUserType />} />{" "}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<RegisterPage />} />
-
       {/* protegidas */}
-      <Route element={<RequireAuth><Outdent /></RequireAuth>} />
+      <Route
+        element={
+          <RequireAuth>
+            <Outdent />
+          </RequireAuth>
+        }
+      />
       <Route path="/patients/:id" element={<MedicalHistoryPage />} />
-
       {/* Doctor */}
       <Route path="/doctor" element={<DoctorDashboard />} />
       {/* alias temporal para compatibilidad */}
-      <Route path="/doctor-dashboard" element={<Navigate to="/doctor" replace />} />
-
-
+      <Route
+        path="/doctor-dashboard"
+        element={<Navigate to="/doctor" replace />}
+      />
       {/* admin */}
       {/* <Route path="/admin" element={<AdminDashboard />} /> */}
-
       {/* pacietes */}
-      {/* <Route path="/paciente" element={<PacienteDashboard />} /> */}
-
+      {<Route path="/paciente" element={<PacienteDashboard />} />}
       {/* compartidas */}
       {/* fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />
