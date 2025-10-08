@@ -246,7 +246,7 @@ const DoctorDashboard = () => {
                                     <Users className="w-4 h-4 mr-2" />
                                     Ver pacientes
                                 </Button>
-                                <Button className="w-full justify-start" variant="outline" onClick={() => navigate("/doctor")}>
+                                <Button className="w-full justify-start" variant="outline" onClick={() => navigate("/doctor/note/new")}>
                                     <FileText className="w-4 h-4 mr-2" />
                                     Nueva nota clínica
                                 </Button>
