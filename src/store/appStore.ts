@@ -123,6 +123,10 @@ interface AppState {
 
     // acciones HC (mínimas por ahora)
     upsertClinicalRecord: (patientId: string, patch: Partial<ClinicalRecord>) => void;
+
+    updateAppointment: (id: string, patch: Partial<Appointment>) => void;
+    deleteAppointment: (id: string) => void;
+
 }
 
 /** Seeds demo */
@@ -457,7 +461,17 @@ const useAppStore = create<AppState>()(
                     },
                 });
             },
+            updateAppointment: (id, patch) =>
+                set((s) => ({
+                    appointments: s.appointments.map((a) =>
+                        a.id === id ? { ...a, ...patch } : a
+                    ),
+                })),
 
+            deleteAppointment: (id) =>
+                set((s) => ({
+                    appointments: s.appointments.filter((a) => a.id !== id),
+                })),
         }),
         {
             name: "hc/app-store",
