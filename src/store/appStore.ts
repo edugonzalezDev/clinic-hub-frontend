@@ -127,6 +127,11 @@ interface AppState {
     updateAppointment: (id: string, patch: Partial<Appointment>) => void;
     deleteAppointment: (id: string) => void;
 
+    // gestion paciente
+    addPatient: (p: Omit<Patient, "id"> & { id?: string }) => string; // devuelve id
+    updatePatient: (id: string, patch: Partial<Patient>) => void;
+    deletePatient?: (id: string) => void;
+
 }
 
 /** Seeds demo */
@@ -472,6 +477,22 @@ const useAppStore = create<AppState>()(
                 set((s) => ({
                     appointments: s.appointments.filter((a) => a.id !== id),
                 })),
+
+
+            // gestio paciente
+            addPatient: (p) => {
+                const id = p.id ?? `p-${crypto.randomUUID()}`;
+                set((s) => ({ patients: [...s.patients, { id, ...p }] }));
+                return id;
+            },
+
+            updatePatient: (id, patch) =>
+                set((s) => ({
+                    patients: s.patients.map(pt => (pt.id === id ? { ...pt, ...patch } : pt)),
+                })),
+
+            deletePatient: (id) =>
+                set((s) => ({ patients: s.patients.filter(pt => pt.id !== id) })),
         }),
         {
             name: "hc/app-store",

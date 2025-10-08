@@ -10,6 +10,7 @@ import { Outdent } from "lucide-react";
 import MedicalHistoryPage from "./features/medical/MedicalHistoryPage";
 import TeleconsultationPage from "./features/televisit/TeleconsultationPage";
 import DoctorAppointmentsPage from "./features/scheduling/DoctorAppointmentsPage";
+import PatientsPage from "./features/patients/PatientsPage";
 
 function RequireAuth({ children }: PropsWithChildren) {
   const user = useAppStore((s) => s.currentUser);
@@ -64,14 +65,8 @@ export default function AppRoutes() {
         </RequireAuth>
       }
       />
-      <Route
-        path="/doctor/appointments"
-        element={
-          <RequireAuth>
-            <DoctorAppointmentsPage />
-          </RequireAuth>
-        }
-      />
+      <Route path="/doctor/appointments" element={<RequireAuth> <DoctorAppointmentsPage /></RequireAuth>} />
+      <Route path="/patients" element={<RequireAuth> <PatientsPage /> </RequireAuth>} />
 
       {/* admin */}
       {/* <Route path="/admin" element={<AdminDashboard />} /> */}
