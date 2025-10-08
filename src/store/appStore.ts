@@ -132,6 +132,12 @@ interface AppState {
     updatePatient: (id: string, patch: Partial<Patient>) => void;
     deletePatient?: (id: string) => void;
 
+    // nota clinica
+    addConsultation: (
+        patientId: string,
+        data: Omit<Consultation, "id" | "doctorId" | "dateISO"> & { dateISO?: string }
+    ) => string;
+
 }
 
 /** Seeds demo */
@@ -493,6 +499,44 @@ const useAppStore = create<AppState>()(
 
             deletePatient: (id) =>
                 set((s) => ({ patients: s.patients.filter(pt => pt.id !== id) })),
+
+            // nota clinica
+            addConsultation: (patientId, data) => {
+                const id = `c-${crypto.randomUUID()}`;
+                const s = get();
+                const doctorId =
+                    s.currentDoctorId ||
+                    s.doctors.find((d) => d.name === s.currentUser?.name)?.id ||
+                    s.doctors[0]?.id ||
+                    "d-unknown";
+
+                const next: Consultation = {
+                    id,
+                    doctorId,
+                    dateISO: data.dateISO ?? new Date().toISOString(),
+                    specialty: data.specialty,
+                    diagnosis: data.diagnosis,
+                    notes: data.notes,
+                };
+
+                const cur = s.clinicalRecords[patientId] ?? {
+                    consultations: [],
+                    medications: [],
+                    labs: [],
+                    vitals: [],
+                };
+                set({
+                    clinicalRecords: {
+                        ...s.clinicalRecords,
+                        [patientId]: {
+                            ...cur,
+                            consultations: [...cur.consultations, next],
+                        },
+                    },
+                });
+
+                return id;
+            },
         }),
         {
             name: "hc/app-store",

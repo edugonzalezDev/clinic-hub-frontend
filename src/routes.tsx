@@ -11,6 +11,7 @@ import MedicalHistoryPage from "./features/medical/MedicalHistoryPage";
 import TeleconsultationPage from "./features/televisit/TeleconsultationPage";
 import DoctorAppointmentsPage from "./features/scheduling/DoctorAppointmentsPage";
 import PatientsPage from "./features/patients/PatientsPage";
+import NewClinicalNotePage from "./features/medical/NewClinicalNotePage";
 
 function RequireAuth({ children }: PropsWithChildren) {
   const user = useAppStore((s) => s.currentUser);
@@ -67,6 +68,14 @@ export default function AppRoutes() {
       />
       <Route path="/doctor/appointments" element={<RequireAuth> <DoctorAppointmentsPage /></RequireAuth>} />
       <Route path="/patients" element={<RequireAuth> <PatientsPage /> </RequireAuth>} />
+      <Route
+        path="/doctor/note/new"
+        element={
+          <RequireAuth>
+            <NewClinicalNotePage />
+          </RequireAuth>
+        }
+      />
 
       {/* admin */}
       {/* <Route path="/admin" element={<AdminDashboard />} /> */}
