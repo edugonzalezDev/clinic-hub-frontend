@@ -57,9 +57,15 @@ export default function AppRoutes() {
       <Route path="/patients/:id" element={<MedicalHistoryPage />} />
 
       {/* Doctor */}
-      <Route path="/doctor" element={<DoctorDashboard />} />
+      {/* <Route path="/doctor" element={<DoctorDashboard />} /> */}
+      <Route path="/doctor" element={
+        <RequireAuth>
+          <DoctorDashboard />
+        </RequireAuth>
+      } />
       {/* alias temporal para compatibilidad */}
       <Route path="/doctor-dashboard" element={<Navigate to="/doctor" replace />} />
+
       <Route path="/televisit/:appointmentId" element={
         <RequireAuth>
           <TeleconsultationPage />
@@ -68,14 +74,7 @@ export default function AppRoutes() {
       />
       <Route path="/doctor/appointments" element={<RequireAuth> <DoctorAppointmentsPage /></RequireAuth>} />
       <Route path="/patients" element={<RequireAuth> <PatientsPage /> </RequireAuth>} />
-      <Route
-        path="/doctor/note/new"
-        element={
-          <RequireAuth>
-            <NewClinicalNotePage />
-          </RequireAuth>
-        }
-      />
+      <Route path="/doctor/note/new" element={<RequireAuth> <NewClinicalNotePage /> </RequireAuth>} />
 
       {/* admin */}
       {/* <Route path="/admin" element={<AdminDashboard />} /> */}
