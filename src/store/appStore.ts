@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { addMinutes } from "date-fns";
 
+
 /** Tipos base */
 export type Role = "patient" | "doctor" | "admin";
 export interface User { id: string; name: string; role: Role; email?: string; }
@@ -88,6 +89,7 @@ interface AppState {
     doctors: Doctor[];
     patients: Patient[];
     appointments: Appointment[];
+
     waitlist: { id: string; patientId: string; reason?: string }[];
 
     // acciones de sesión
@@ -131,8 +133,10 @@ const seedDoctors: Doctor[] = [
 ];
 const seedPatients: Patient[] = [
     { id: "p1", name: "Juan Ramírez", docId: "34.567.890", phone: "+54 9 294 123", notes: "Alergia a penicilina" },
-    { id: "p2", name: "Ana Díaz", docId: "29.111.222" },
-    { id: "p3", name: "Carlos Rodríguez", docId: "XX.333.444" },
+    { id: "p2", name: "Ana Díaz", docId: "29.111.222", phone: "+54 9 2944396777", notes: "Alergia a penicilina" },
+    { id: "p3", name: "Carlos Rodríguez", docId: "XX.333.444", phone: "+54 9 294 123", notes: "Alergia a penicilina" },
+    { id: "p4", name: "María López", docId: "XX.555.666", phone: "+54 9 294 123", notes: "Alergia a penicilina" },
+    { id: "p5", name: "Pedro Gómez", docId: "XX.777.888", phone: "+54 9 294 123", notes: "Alergia a penicilina" },
 ];
 const seedAppointments: Appointment[] = [
     {
@@ -144,6 +148,52 @@ const seedAppointments: Appointment[] = [
         type: "virtual",
         status: "confirmed",
     },
+    {
+        id: "a2",
+        doctorId: "d1",
+        patientId: "p2",
+        startsAt: new Date().toISOString(),
+        endsAt: addMinutes(new Date(), 30).toISOString(),
+        type: "presencial",
+        status: "confirmed",
+    },
+    {
+        id: "a3",
+        doctorId: "d1",
+        patientId: "p3",
+        startsAt: new Date().toISOString(),
+        endsAt: addMinutes(new Date(), 30).toISOString(),
+        type: "virtual",
+        status: "confirmed",
+    },
+    {
+        id: "a4",
+        doctorId: "d1",
+        patientId: "p4",
+        startsAt: new Date().toISOString(),
+        endsAt: addMinutes(new Date(), 30).toISOString(),
+        type: "virtual",
+        status: "confirmed",
+    },
+    {
+        id: "a5",
+        doctorId: "d1",
+        patientId: "p5",
+        startsAt: new Date().toISOString(),
+        endsAt: addMinutes(new Date(), 30).toISOString(),
+        type: "virtual",
+        status: "confirmed",
+    },
+    {
+        id: "a6",
+        doctorId: "d1",
+        patientId: "p6",
+        startsAt: new Date().toISOString(),
+        endsAt: addMinutes(new Date(), 30).toISOString(),
+        type: "virtual",
+        status: "confirmed",
+    },
+
 ];
 const seedUsers: AuthUser[] = [
     {
@@ -169,7 +219,7 @@ const seedClinical: Record<string, ClinicalRecord> = {
         consultations: [
             {
                 id: "c1",
-                dateISO: "2024-01-15",
+                dateISO: new Date().toISOString(),
                 doctorId: "d1",
                 specialty: "Cardiología",
                 diagnosis: "Chequeo anual - Todo OK",
@@ -177,12 +227,20 @@ const seedClinical: Record<string, ClinicalRecord> = {
             },
             {
                 id: "c2",
-                dateISO: "2023-12-10",
+                dateISO: new Date().toISOString(),
                 doctorId: "d2",
                 specialty: "Clínica",
                 diagnosis: "Resfrío común",
                 notes: "Reposo e hidratación.",
             },
+            {
+                id: "c3",
+                dateISO: new Date().toISOString(),
+                doctorId: "d1",
+                specialty: "Pediatría",
+                diagnosis: "Chequeo anual - Todo OK",
+                notes: "Cuidarse con las comidad, sal.",
+            }
         ],
         medications: [
             { id: "m1", name: "Lisinopril", dosage: "10 mg", frequency: "1 vez al día", status: "active" },
@@ -202,7 +260,7 @@ const seedClinical: Record<string, ClinicalRecord> = {
         consultations: [
             {
                 id: "c3",
-                dateISO: "2024-01-20",
+                dateISO: new Date().toISOString(),
                 doctorId: "XX",
                 specialty: "Ginecología",
                 diagnosis: "Examen de rutina",
@@ -210,7 +268,7 @@ const seedClinical: Record<string, ClinicalRecord> = {
             },
             {
                 id: "c4",
-                dateISO: "2024-01-18",
+                dateISO: new Date().toISOString(),
                 doctorId: "XX",
                 specialty: "Clínica",
                 diagnosis: "Resfrío común",
@@ -218,7 +276,7 @@ const seedClinical: Record<string, ClinicalRecord> = {
             },
             {
                 id: "c5",
-                dateISO: "2024-01-17",
+                dateISO: new Date().toISOString(),
                 doctorId: "XX",
                 specialty: "Clínica",
                 diagnosis: "Resfrío común",
