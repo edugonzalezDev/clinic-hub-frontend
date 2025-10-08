@@ -8,6 +8,7 @@ import useAppStore from "./store/appStore";
 import type { PropsWithChildren } from "react";
 import { Outdent } from "lucide-react";
 import MedicalHistoryPage from "./features/medical/MedicalHistoryPage";
+import TeleconsultationPage from "./features/televisit/TeleconsultationPage";
 
 function RequireAuth({ children }: PropsWithChildren) {
   const user = useAppStore((s) => s.currentUser);
@@ -32,6 +33,11 @@ function HomeGate() {
   const user = useAppStore((s) => s.currentUser);
   return user ? <RoleHome /> : <LandingPage />;
 }
+// function HomeGate({ children }: PropsWithChildren) {
+//   const user = useAppStore((s) => s.currentUser);
+//   return user ? <RoleHome /> : <LandingPage />;
+// }
+
 
 
 export default function AppRoutes() {
@@ -51,7 +57,14 @@ export default function AppRoutes() {
       <Route path="/doctor" element={<DoctorDashboard />} />
       {/* alias temporal para compatibilidad */}
       <Route path="/doctor-dashboard" element={<Navigate to="/doctor" replace />} />
-
+      <Route
+        path="/televisit/:appointmentId"
+        element={
+          <RequireAuth>
+            <TeleconsultationPage />
+          </RequireAuth>
+        }
+      />
 
       {/* admin */}
       {/* <Route path="/admin" element={<AdminDashboard />} /> */}
