@@ -9,6 +9,8 @@ import type { PropsWithChildren } from "react";
 import { Outdent } from "lucide-react";
 import MedicalHistoryPage from "./features/medical/MedicalHistoryPage";
 import TeleconsultationPage from "./features/televisit/TeleconsultationPage";
+import DoctorAppointmentsPage from "./features/scheduling/DoctorAppointmentsPage";
+import PatientsPage from "./features/patients/PatientsPage";
 
 function RequireAuth({ children }: PropsWithChildren) {
   const user = useAppStore((s) => s.currentUser);
@@ -57,14 +59,14 @@ export default function AppRoutes() {
       <Route path="/doctor" element={<DoctorDashboard />} />
       {/* alias temporal para compatibilidad */}
       <Route path="/doctor-dashboard" element={<Navigate to="/doctor" replace />} />
-      <Route
-        path="/televisit/:appointmentId"
-        element={
-          <RequireAuth>
-            <TeleconsultationPage />
-          </RequireAuth>
-        }
+      <Route path="/televisit/:appointmentId" element={
+        <RequireAuth>
+          <TeleconsultationPage />
+        </RequireAuth>
+      }
       />
+      <Route path="/doctor/appointments" element={<RequireAuth> <DoctorAppointmentsPage /></RequireAuth>} />
+      <Route path="/patients" element={<RequireAuth> <PatientsPage /> </RequireAuth>} />
 
       {/* admin */}
       {/* <Route path="/admin" element={<AdminDashboard />} /> */}
