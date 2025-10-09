@@ -37,7 +37,7 @@ export default function NewPrescriptionPage() {
         if (!canSave || !patient) return;
 
         const fileUrl = genPrescriptionPdf({
-            doctor: { name: doctor.name, specialty: doctor.specialty, license: doctor.license, signaturePng: doctor.signaturePng, stampPng: doctor.stampPng },
+            doctor: { name: doctor.name, license: doctor.license, signaturePng: doctor.signaturePng, stampPng: doctor.stampPng },
             patient: { name: patient.name, docId: patient.docId, insurance: patient.insurance },
             diagnosis: diagnosis || undefined,
             items
