@@ -7,8 +7,60 @@ import { addMinutes } from "date-fns";
 export type Role = "patient" | "doctor" | "admin";
 export interface User { id: string; name: string; role: Role; email?: string; }
 
-export interface Doctor { id: string; name: string; specialty: string; color?: string; }
-export interface Patient { id: string; name: string; docId: string; phone?: string; notes?: string; }
+export interface Doctor {
+    id: string;
+    name: string;
+    specialty: string;
+    color?: string;
+    license?: string;          // matrícula/colegiatura
+    signaturePng?: string; //url png sin fondo (firma)
+    stampPng?: string;  //png sin fondo (sello)
+}
+export interface Patient {
+    id: string;
+    name: string;
+    docId: string;
+    phone?: string;
+    notes?: string;
+    insurance?: {
+        provider?: string;       // obra social / seguro
+        plan?: string;
+        memberId?: string;       // nro. afiliado / póliza
+    };
+}
+
+// ++++ certificados-recetas PDF +++
+// Documentos
+export type Certificate = {
+    id: string;
+    dateISO: string;
+    doctorId: string;
+    patientId: string;
+    reason: string;            // “certifica que…”
+    recommendations?: string;  // reposo, restricciones, etc.
+    period?: { fromISO: string; toISO: string };
+    fileUrl?: string;          // blob URL del PDF generado
+};
+
+export type RxItem = {
+    drug: string;
+    dose: string;              // “500 mg”
+    frequency: string;         // “cada 8 h”
+    duration: string;          // “7 días”
+    notes?: string;
+};
+export type Prescription = {
+    id: string;
+    dateISO: string;
+    doctorId: string;
+    patientId: string;
+    diagnosis?: string;
+    items: RxItem[];
+    insuranceSnapshot?: Patient["insurance"]; // copia al momento de emitir
+    fileUrl?: string;
+};
+
+// ++++ FIN - certificados-recetas PDF +++
 
 // 👇 Tipos de Historia Clínica
 export type Consultation = {
@@ -46,6 +98,8 @@ export type ClinicalRecord = {
     medications: Medication[];
     labs: LabResult[];
     vitals: Vital[];
+    certificates?: Certificate[];
+    prescriptions?: Prescription[];
 };
 
 
@@ -136,6 +190,20 @@ interface AppState {
     addConsultation: (
         patientId: string,
         data: Omit<Consultation, "id" | "doctorId" | "dateISO"> & { dateISO?: string }
+    ) => string;
+
+    // para certificados-recetas
+    updateDoctorProfile: (patch: Partial<Doctor>) => void;
+    addCertificate: (
+        patientId: string,
+        data: Omit<Certificate, "id" | "doctorId" | "dateISO" | "patientId">
+            & { dateISO?: string; fileUrl?: string }
+    ) => string;
+
+    addPrescription: (
+        patientId: string,
+        data: Omit<Prescription, "id" | "doctorId" | "dateISO" | "patientId">
+            & { dateISO?: string; fileUrl?: string }
     ) => string;
 
 }
@@ -537,6 +605,60 @@ const useAppStore = create<AppState>()(
 
                 return id;
             },
+
+            updateDoctorProfile: (patch) => {
+                const s = get();
+                const id = s.currentDoctorId;
+                if (!id) return;
+                set({
+                    doctors: s.doctors.map(d => d.id === id ? { ...d, ...patch } : d)
+                });
+            },
+
+            addCertificate: (patientId, data) => {
+                const s = get();
+                const id = `cert-${crypto.randomUUID()}`;
+                const doctorId = s.currentDoctorId || s.doctors[0]?.id || "d-unknown";
+                const cur = s.clinicalRecords[patientId] ?? { consultations: [], medications: [], labs: [], vitals: [] };
+                const doc: Certificate = {
+                    id, patientId, doctorId,
+                    dateISO: data.dateISO ?? new Date().toISOString(),
+                    reason: data.reason,
+                    recommendations: data.recommendations,
+                    period: data.period,
+                    fileUrl: data.fileUrl,
+                };
+                set({
+                    clinicalRecords: {
+                        ...s.clinicalRecords,
+                        [patientId]: { ...cur, certificates: [...(cur.certificates ?? []), doc] }
+                    }
+                });
+                return id;
+            },
+
+            addPrescription: (patientId, data) => {
+                const s = get();
+                const id = `rx-${crypto.randomUUID()}`;
+                const doctorId = s.currentDoctorId || s.doctors[0]?.id || "d-unknown";
+                const cur = s.clinicalRecords[patientId] ?? { consultations: [], medications: [], labs: [], vitals: [] };
+                const rx: Prescription = {
+                    id, patientId, doctorId,
+                    dateISO: data.dateISO ?? new Date().toISOString(),
+                    diagnosis: data.diagnosis,
+                    items: data.items,
+                    insuranceSnapshot: data.insuranceSnapshot,
+                    fileUrl: data.fileUrl,
+                };
+                set({
+                    clinicalRecords: {
+                        ...s.clinicalRecords,
+                        [patientId]: { ...cur, prescriptions: [...(cur.prescriptions ?? []), rx] }
+                    }
+                });
+                return id;
+            },
+
         }),
         {
             name: "hc/app-store",

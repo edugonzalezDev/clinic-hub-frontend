@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, Video, FileText, Users, LogOut, Activity, Clock } from "lucide-react";
+import { Calendar, Video, FileText, Users, LogOut, Activity, Clock, Award, Stamp, Pill } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { useDndOrder } from "@/hooks/useDndOrder"; // <— nuevo
@@ -43,7 +43,7 @@ const DoctorDashboard = () => {
     //         .sort((a, b) => +new Date(a.startsAt) - +new Date(b.startsAt));
     // }, [appointments, doctorId]);
 
-    // ✅ Citas de hoy por rango local (evita problemas de huso horario)
+    // Citas de hoy por rango local (evita problemas de huso horario)
     const todayAppts = useMemo(() => {
         const start = startOfToday();
         const end = endOfToday();
@@ -57,7 +57,7 @@ const DoctorDashboard = () => {
 
 
 
-    // ✅ storageKey determinística por fecha
+    // storageKey determinística por fecha
     const storageKey = useMemo(
         () => `agenda:${doctorId}:${format(new Date(), "yyyy-MM-dd")}`,
         [doctorId]
@@ -249,6 +249,18 @@ const DoctorDashboard = () => {
                                 <Button className="w-full justify-start" variant="outline" onClick={() => navigate("/doctor/note/new")}>
                                     <FileText className="w-4 h-4 mr-2" />
                                     Nueva nota clínica
+                                </Button>
+                                <Button className="w-full justify-start" variant="outline" onClick={() => navigate("/doctor/settings/signature")}>
+                                    <Stamp className="w-4 h-4 mr-2" />
+                                    Configurar firma/sello
+                                </Button>
+                                <Button className="w-full justify-start" variant="outline" onClick={() => navigate("/doctor/certificate/new")}>
+                                    <Award className="w-4 h-4 mr-2" />
+                                    Certificado médico
+                                </Button>
+                                <Button className="w-full justify-start" variant="outline" onClick={() => navigate("/doctor/prescription/new")}>
+                                    <Pill className="w-4 h-4 mr-2" />
+                                    Receta
                                 </Button>
                             </CardContent>
                         </Card>

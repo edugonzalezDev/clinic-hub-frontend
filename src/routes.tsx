@@ -12,6 +12,9 @@ import TeleconsultationPage from "./features/televisit/TeleconsultationPage";
 import DoctorAppointmentsPage from "./features/scheduling/DoctorAppointmentsPage";
 import PatientsPage from "./features/patients/PatientsPage";
 import NewClinicalNotePage from "./features/medical/NewClinicalNotePage";
+import SignatureSettingsPage from "./features/doctor/SignatureSettingsPage";
+import NewPrescriptionPage from "./features/medical/NewPrescriptionPage";
+import NewCertificatePage from "./features/medical/NewCertificatePage";
 
 function RequireAuth({ children }: PropsWithChildren) {
   const user = useAppStore((s) => s.currentUser);
@@ -20,26 +23,17 @@ function RequireAuth({ children }: PropsWithChildren) {
 }
 
 // Redirige según rol
-function RoleHome() {
-  const user = useAppStore((s) => s.currentUser);
-  if (!user) return <Navigate to="/login" replace />;
-  switch (user.role) {
-    case "doctor": return <Navigate to="/doctor" replace />;
-    case "patient": return <Navigate to="/patient" replace />;
-    case "admin": return <Navigate to="/admin" replace />;
-    default: return <Navigate to="/login" replace />;
-  }
-}
-
-// HomeGate: si hay sesión -> RoleHome, si no -> Landing
-function HomeGate() {
-  const user = useAppStore((s) => s.currentUser);
-  return user ? <RoleHome /> : <LandingPage />;
-}
-// function HomeGate({ children }: PropsWithChildren) {
+// function RoleHome() {
 //   const user = useAppStore((s) => s.currentUser);
-//   return user ? <RoleHome /> : <LandingPage />;
+//   if (!user) return <Navigate to="/login" replace />;
+//   switch (user.role) {
+//     case "doctor": return <Navigate to="/doctor" replace />;
+//     case "patient": return <Navigate to="/patient" replace />;
+//     case "admin": return <Navigate to="/admin" replace />;
+//     default: return <Navigate to="/login" replace />;
+//   }
 // }
+
 
 
 
@@ -75,6 +69,9 @@ export default function AppRoutes() {
       <Route path="/doctor/appointments" element={<RequireAuth> <DoctorAppointmentsPage /></RequireAuth>} />
       <Route path="/patients" element={<RequireAuth> <PatientsPage /> </RequireAuth>} />
       <Route path="/doctor/note/new" element={<RequireAuth> <NewClinicalNotePage /> </RequireAuth>} />
+      <Route path="/doctor/settings/signature" element={<RequireAuth><SignatureSettingsPage /></RequireAuth>} />
+      <Route path="/doctor/certificate/new" element={<RequireAuth><NewCertificatePage /></RequireAuth>} />
+      <Route path="/doctor/prescription/new" element={<RequireAuth><NewPrescriptionPage /></RequireAuth>} />
 
       {/* admin */}
       {/* <Route path="/admin" element={<AdminDashboard />} /> */}
