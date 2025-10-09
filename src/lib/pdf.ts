@@ -1,4 +1,3 @@
-// lib/pdf.ts
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -64,12 +63,16 @@ export function genCertificatePdf(opts: {
         if (opts.doctor.signaturePng) {
             doc.addImage(opts.doctor.signaturePng, 'PNG', left, baseY, 60, 20);
         }
-    } catch { }
+    } catch (e) {
+        if (import.meta.env.DEV) console.debug("addImage signature failed", e);
+    }
     try {
         if (opts.doctor.stampPng) {
             doc.addImage(opts.doctor.stampPng, 'PNG', left + 90, baseY - 5, 50, 50);
         }
-    } catch { }
+    } catch (e) {
+        if (import.meta.env.DEV) console.debug("addImage stamp failed", e);
+    }
 
     doc.line(left, baseY + 24, left + 70, baseY + 24);
     doc.text(
@@ -132,12 +135,16 @@ export function genPrescriptionPdf(opts: {
         if (opts.doctor.signaturePng) {
             doc.addImage(opts.doctor.signaturePng, 'PNG', left, baseY - 12, 60, 18);
         }
-    } catch { }
+    } catch (e) {
+        if (import.meta.env.DEV) console.debug("addImage signature failed", e);
+    }
     try {
         if (opts.doctor.stampPng) {
             doc.addImage(opts.doctor.stampPng, 'PNG', left + 90, baseY - 20, 50, 50);
         }
-    } catch { }
+    } catch (e) {
+        if (import.meta.env.DEV) console.debug("addImage stamp failed", e)
+    }
 
     doc.line(left, baseY + 10, left + 70, baseY + 10);
     doc.text(
