@@ -156,8 +156,6 @@ export default function DoctorAppointmentsPage() {
         toast.success("Turno actualizado");
     };
 
-
-
     return (
         <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
             {/* Header */}
@@ -321,6 +319,7 @@ export default function DoctorAppointmentsPage() {
                                             {orderedAppts.map((a, index) => {
                                                 const p = patients.find((x) => x.id === a.patientId);
                                                 const start = parseISO(a.startsAt);
+                                                // const end = parseISO(a.endsAt);
                                                 const end = parseISO(a.endsAt);
                                                 const isEditing = editingId === a.id;
 
