@@ -8,6 +8,10 @@ import useAppStore from "./store/appStore";
 import type { PropsWithChildren } from "react";
 import { Outdent } from "lucide-react";
 import MedicalHistoryPage from "./features/medical/MedicalHistoryPage";
+import TeleconsultationPage from "./features/televisit/TeleconsultationPage";
+import DoctorAppointmentsPage from "./features/scheduling/DoctorAppointmentsPage";
+import PatientsPage from "./features/patients/PatientsPage";
+import NewClinicalNotePage from "./features/medical/NewClinicalNotePage";
 import PacienteDashboard from "./features/patient/pages/PatientDashboard";
 
 function RequireAuth({ children }: PropsWithChildren) {
@@ -58,6 +62,44 @@ export default function AppRoutes() {
       {/* Doctor */}
       <Route path="/doctor" element={<DoctorDashboard />} />
       {/* alias temporal para compatibilidad */}
+      <Route
+        path="/doctor-dashboard"
+        element={<Navigate to="/doctor" replace />}
+      />
+      <Route
+        path="/televisit/:appointmentId"
+        element={
+          <RequireAuth>
+            <TeleconsultationPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/doctor/appointments"
+        element={
+          <RequireAuth>
+            {" "}
+            <DoctorAppointmentsPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/patients"
+        element={
+          <RequireAuth>
+            {" "}
+            <PatientsPage />{" "}
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/doctor/note/new"
+        element={
+          <RequireAuth>
+            <NewClinicalNotePage />
+          </RequireAuth>
+        }
+      />
       <Route
         path="/doctor-dashboard"
         element={<Navigate to="/doctor" replace />}

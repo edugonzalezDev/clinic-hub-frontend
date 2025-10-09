@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,13 +6,17 @@ import { Badge } from "@/components/ui/badge";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { useDndOrder } from "@/hooks/useDndOrder"; // <— nuevo
 
-import useAppStore from "@/store/appStore";
+import { parseISO, startOfToday, endOfToday, isWithinInterval, format, compareAsc } from "date-fns";
 
-function isSameDay(a: Date, b: Date) {
-    return a.getFullYear() === b.getFullYear() &&
-        a.getMonth() === b.getMonth() &&
-        a.getDate() === b.getDate();
-}
+import useAppStore from "@/store/appStore";
+import { useMemo } from "react";
+
+
+// function isSameDay(a: Date, b: Date) {
+//     return a.getFullYear() === b.getFullYear() &&
+//         a.getMonth() === b.getMonth() &&
+//         a.getDate() === b.getDate();
+// }
 
 function hhmm(d: Date) {
     return new Intl.DateTimeFormat(undefined, { hour: "2-digit", minute: "2-digit" }).format(d);
@@ -33,15 +36,30 @@ const DoctorDashboard = () => {
     }, [currentDoctorId, doctors, currentUser?.name]);
 
     // Citas de hoy para el doctor
+    // const todayAppts = useMemo(() => {
+    //     const today = new Date();
+    //     return appointments
+    //         .filter((a) => a.doctorId === doctorId && isSameDay(new Date(a.startsAt), today))
+    //         .sort((a, b) => +new Date(a.startsAt) - +new Date(b.startsAt));
+    // }, [appointments, doctorId]);
+
+    // ✅ Citas de hoy por rango local (evita problemas de huso horario)
     const todayAppts = useMemo(() => {
-        const today = new Date();
+        const start = startOfToday();
+        const end = endOfToday();
         return appointments
-            .filter((a) => a.doctorId === doctorId && isSameDay(new Date(a.startsAt), today))
-            .sort((a, b) => +new Date(a.startsAt) - +new Date(b.startsAt));
+            .filter((a) =>
+                a.doctorId === doctorId &&
+                isWithinInterval(parseISO(a.startsAt), { start, end })
+            )
+            .sort((a, b) => compareAsc(parseISO(a.startsAt), parseISO(b.startsAt)));
     }, [appointments, doctorId]);
 
+
+
+    // ✅ storageKey determinística por fecha
     const storageKey = useMemo(
-        () => `agenda:${doctorId}:${new Date().toDateString()}`,
+        () => `agenda:${doctorId}:${format(new Date(), "yyyy-MM-dd")}`,
         [doctorId]
     );
 
@@ -157,12 +175,12 @@ const DoctorDashboard = () => {
                                                                     ref={dragProvided.innerRef}
                                                                     {...dragProvided.draggableProps}
                                                                     className={`flex items-center justify-between p-4 rounded-lg border bg-card transition-colors
-                                ${snapshot.isDragging ? "ring-2 ring-primary/50 bg-accent/20" : "hover:bg-accent/5"}`}
+                                                                    ${snapshot.isDragging ? "ring-2 ring-primary/50 bg-accent/20" : "hover:bg-accent/5"}`}
                                                                 >
                                                                     {/* “manija” de arrastre: podés moverla a un icono si querés */}
                                                                     <div
                                                                         {...dragProvided.dragHandleProps}
-                                                                        className="cursor-grab active:cursor-grabbing select-none mr-3 text-slate-400"
+                                                                        className="cursor-grab active:cursor-grabbing select-none mr-3 text-blue-500"
                                                                         title="Arrastrar para reordenar"
                                                                         aria-label="Arrastrar para reordenar"
                                                                     >
@@ -228,7 +246,7 @@ const DoctorDashboard = () => {
                                     <Users className="w-4 h-4 mr-2" />
                                     Ver pacientes
                                 </Button>
-                                <Button className="w-full justify-start" variant="outline" onClick={() => navigate("/doctor")}>
+                                <Button className="w-full justify-start" variant="outline" onClick={() => navigate("/doctor/note/new")}>
                                     <FileText className="w-4 h-4 mr-2" />
                                     Nueva nota clínica
                                 </Button>
