@@ -12,6 +12,9 @@ import TeleconsultationPage from "./features/televisit/TeleconsultationPage";
 import DoctorAppointmentsPage from "./features/scheduling/DoctorAppointmentsPage";
 import PatientsPage from "./features/patients/PatientsPage";
 import NewClinicalNotePage from "./features/medical/NewClinicalNotePage";
+import SignatureSettingsPage from "./features/doctor/SignatureSettingsPage";
+import NewPrescriptionPage from "./features/medical/NewPrescriptionPage";
+import NewCertificatePage from "./features/medical/NewCertificatePage";
 import PacienteDashboard from "./features/patient/pages/PatientDashboard";
 
 function RequireAuth({ children }: PropsWithChildren) {
@@ -41,6 +44,10 @@ function HomeGate() {
   const user = useAppStore((s) => s.currentUser);
   return user ? <RoleHome /> : <LandingPage />;
 }
+// function HomeGate({ children }: PropsWithChildren) {
+//   const user = useAppStore((s) => s.currentUser);
+//   return user ? <RoleHome /> : <LandingPage />;
+// }
 
 export default function AppRoutes() {
   return (
@@ -60,7 +67,15 @@ export default function AppRoutes() {
       />
       <Route path="/patients/:id" element={<MedicalHistoryPage />} />
       {/* Doctor */}
-      <Route path="/doctor" element={<DoctorDashboard />} />
+      {/* <Route path="/doctor" element={<DoctorDashboard />} /> */}
+      <Route
+        path="/doctor"
+        element={
+          <RequireAuth>
+            <DoctorDashboard />
+          </RequireAuth>
+        }
+      />
       {/* alias temporal para compatibilidad */}
       <Route
         path="/doctor-dashboard"
@@ -96,13 +111,34 @@ export default function AppRoutes() {
         path="/doctor/note/new"
         element={
           <RequireAuth>
-            <NewClinicalNotePage />
+            {" "}
+            <NewClinicalNotePage />{" "}
           </RequireAuth>
         }
       />
       <Route
-        path="/doctor-dashboard"
-        element={<Navigate to="/doctor" replace />}
+        path="/doctor/settings/signature"
+        element={
+          <RequireAuth>
+            <SignatureSettingsPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/doctor/certificate/new"
+        element={
+          <RequireAuth>
+            <NewCertificatePage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/doctor/prescription/new"
+        element={
+          <RequireAuth>
+            <NewPrescriptionPage />
+          </RequireAuth>
+        }
       />
       {/* admin */}
       {/* <Route path="/admin" element={<AdminDashboard />} /> */}
