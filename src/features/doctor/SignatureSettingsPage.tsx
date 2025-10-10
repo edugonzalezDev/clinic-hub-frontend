@@ -3,7 +3,7 @@ import useAppStore from "@/store/appStore";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Activity, ArrowLeft } from "lucide-react";
+import { Activity, ArrowLeft, Upload } from "lucide-react";
 import { useNavigate } from "react-router";
 
 function fileToDataURL(f: File): Promise<string> {
@@ -63,22 +63,27 @@ export default function SignatureSettingsPage() {
                 <Card>
                     <CardHeader><CardTitle>Firma y sello digital</CardTitle></CardHeader>
                     <CardContent className="grid md:grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                            <Label>Firma (PNG con fondo transparente)</Label>
+                        <div className="w-full h-auto space-y-2 flex flex-col justify-center items-center border-2 border-slate-300 rounded-md relative">
+                            <Label htmlFor="file_firma" className="w-auto max-w-full text-xs md:text-[15px] xl:text-lg">Firma (PNG con fondo transparente)
+                                <Upload />
+
+                            </Label>
                             <input
-                                type="file" accept="image/png"
+                                type="file" id="file_firma" accept="image/png" className="w-auto max-w-full h-auto px-2 text-center text-xs md:text-[15px] xl:text-lg"
                                 onChange={async (e) => {
                                     const f = e.target.files?.[0]; if (!f) return;
                                     const url = await fileToDataURL(f);
                                     setSig(url);
                                 }}
-                            />
+                            ></input>
                             {sig && <img src={sig} alt="firma" className="h-24 object-contain border rounded" />}
                         </div>
-                        <div className="space-y-2">
-                            <Label>Sello (PNG con fondo transparente)</Label>
+                        <div className="space-y-2 flex flex-col justify-center items-center border-2 border-slate-300 rounded-md">
+                            <Label htmlFor="file_sello" className="w-auto max-w-full text-xs md:text-[15px] xl:text-lg">Sello (PNG con fondo transparente)
+                                <Upload />
+                            </Label>
                             <input
-                                type="file" accept="image/png"
+                                type="file" id="file_sello" accept="image/png" className="w-auto max-w-full h-auto px-2 text-center text-xs md:text-[15px] xl:text-lg"
                                 onChange={async (e) => {
                                     const f = e.target.files?.[0]; if (!f) return;
                                     const url = await fileToDataURL(f);
