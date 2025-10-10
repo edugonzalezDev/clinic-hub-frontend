@@ -160,9 +160,9 @@ export default function DoctorAppointmentsPage() {
         <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
             {/* Header */}
             <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
-                <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="gap-2">
+                <div className="container mx-auto px-4 py-4 flex items-center justify-between gap-1">
+                    <div className="flex items-center gap-3 ">
+                        <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="gap-2 hidden lg:block">
                             <ArrowLeft className="w-4 h-4" />
                             Volver
                         </Button>
@@ -176,7 +176,7 @@ export default function DoctorAppointmentsPage() {
                             </div>
                         </div>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:gap-3">
                         <div className="flex items-center gap-2">
                             <CalIcon className="w-4 h-4 text-primary" />
                             <Input
@@ -351,7 +351,7 @@ export default function DoctorAppointmentsPage() {
                                                                         </div>
                                                                     </div>
 
-                                                                    <div className="flex gap-2">
+                                                                    <section className="buttons-gestionAgenda flex flex-col lg:flex-row lg:gap-2 gap-2">
                                                                         <Button size="sm" variant="outline" className="gap-1" onClick={() => openEdit(a.id)}>
                                                                             <Edit3 className="w-4 h-4" /> Editar
                                                                         </Button>
@@ -379,16 +379,17 @@ export default function DoctorAppointmentsPage() {
                                                                                 <CheckCircle className="w-4 h-4" /> Confirmar
                                                                             </Button>
                                                                         )}
-                                                                    </div>
-                                                                    <Button
-                                                                        variant="destructive"
-                                                                        size="sm"
-                                                                        onClick={() => {
-                                                                            if (confirm("¿Eliminar este turno?")) deleteAppointment(a.id);
-                                                                        }}
-                                                                    >
-                                                                        Eliminar
-                                                                    </Button>
+                                                                        <Button
+                                                                            variant="destructive"
+                                                                            size="sm"
+                                                                            onClick={() => {
+                                                                                if (confirm("¿Eliminar este turno?")) deleteAppointment(a.id);
+                                                                            }}
+                                                                        >
+                                                                            Eliminar
+                                                                        </Button>
+                                                                    </section>
+
                                                                 </div>
 
                                                                 {/* Editor inline */}

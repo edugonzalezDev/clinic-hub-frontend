@@ -143,16 +143,18 @@ export default function PatientsPage() {
                                         Última consulta:{" "}
                                         {last ? format(parseISO(last), "dd/MM/yyyy") : "—"}
                                     </div>
-                                    <div className="flex gap-2">
+                                    <div className="flex flex-col xl:flex-row gap-2">
                                         <Button
-                                            size="sm"
+                                            // size="sm"
+                                            className="text-xs  p-2 w-auto h-auto md:p-2 md:text-[15px]"
                                             variant="outline"
                                             onClick={() => navigate(`/patients/${p.id}`)}
                                         >
                                             <FileText className="w-4 h-4 mr-2" /> Historia
                                         </Button>
                                         <Button
-                                            size="sm"
+                                            // size="sm"
+                                            className="text-xs  p-2 w-auto h-auto md:p-2 md:text-[15px]"
                                             onClick={() => navigate(`/doctor/appointments?patientId=${p.id}`)}
                                         >
                                             <Calendar className="w-4 h-4 mr-2" /> Nuevo turno
