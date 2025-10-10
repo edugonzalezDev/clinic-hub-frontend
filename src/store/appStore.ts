@@ -29,6 +29,18 @@ export interface Patient {
     };
 }
 
+export type DoctorSnapshot = {
+    name: string;
+    license?: string;
+    signaturePng?: string;
+    stampPng?: string;
+};
+
+export type PatientSnapshot = {
+    name: string;
+    docId?: string;
+    insurance?: Patient["insurance"];
+};
 // ++++ certificados-recetas PDF +++
 // Documentos
 export type Certificate = {
@@ -40,6 +52,8 @@ export type Certificate = {
     recommendations?: string;  // reposo, restricciones, etc.
     period?: { fromISO: string; toISO: string };
     fileUrl?: string;          // blob URL del PDF generado
+    doctorSnapshot?: DoctorSnapshot;
+    patientSnapshot?: PatientSnapshot;
 };
 
 export type RxItem = {
@@ -58,6 +72,9 @@ export type Prescription = {
     items: RxItem[];
     insuranceSnapshot?: Patient["insurance"]; // copia al momento de emitir
     fileUrl?: string;
+
+    doctorSnapshot?: DoctorSnapshot;
+    patientSnapshot?: PatientSnapshot;
 };
 
 // ++++ FIN - certificados-recetas PDF +++
@@ -627,6 +644,10 @@ const useAppStore = create<AppState>()(
                     recommendations: data.recommendations,
                     period: data.period,
                     fileUrl: data.fileUrl,
+
+                    // 👇 nuevos (opcionales)
+                    doctorSnapshot: data.doctorSnapshot,
+                    patientSnapshot: data.patientSnapshot,
                 };
                 set({
                     clinicalRecords: {
@@ -649,6 +670,10 @@ const useAppStore = create<AppState>()(
                     items: data.items,
                     insuranceSnapshot: data.insuranceSnapshot,
                     fileUrl: data.fileUrl,
+
+                    // 👇 nuevos (opcionales)
+                    doctorSnapshot: data.doctorSnapshot,
+                    patientSnapshot: data.patientSnapshot,
                 };
                 set({
                     clinicalRecords: {

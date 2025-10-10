@@ -10,7 +10,7 @@ import { Activity, ArrowLeft, CalendarPlus, Calendar as CalIcon, CheckCircle, Cl
 import { toast } from "sonner";
 import useAppStore, { type Appointment } from "@/store/appStore";
 import { useDndOrder } from "@/hooks/useDndOrder";
-import { addMinutes, compareAsc, endOfDay, format, parseISO, startOfDay, isWithinInterval } from "date-fns";
+import { addMinutes, compareAsc, endOfDay, format, parse, parseISO, startOfDay, isWithinInterval } from "date-fns";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
 function StatusBadge({ status }: { status: "pending" | "confirmed" | "cancelled" }) {
@@ -51,8 +51,13 @@ export default function DoctorAppointmentsPage() {
         // sanity: si cambia doctor, mantenemos el día actual
     }, [doctorId]);
 
-    const dayStart = useMemo(() => startOfDay(new Date(day)), [day]);
-    const dayEnd = useMemo(() => endOfDay(new Date(day)), [day]);
+    // const dayStart = useMemo(() => startOfDay(new Date(day)), [day]);
+    // const dayEnd = useMemo(() => endOfDay(new Date(day)), [day]);
+
+    // Después (día local, sin shift de huso)
+    const dayDate = useMemo(() => parse(day, "yyyy-MM-dd", new Date()), [day]);
+    const dayStart = useMemo(() => startOfDay(dayDate), [dayDate]);
+    const dayEnd = useMemo(() => endOfDay(dayDate), [dayDate]);
 
     const dayAppts = useMemo(() => {
         return appointments
@@ -150,8 +155,6 @@ export default function DoctorAppointmentsPage() {
         setEditingId(null);
         toast.success("Turno actualizado");
     };
-
-
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
@@ -301,7 +304,7 @@ export default function DoctorAppointmentsPage() {
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <Clock className="w-5 h-5 text-primary" />
-                            Agenda del {format(new Date(day), "dd/MM/yyyy")}
+                            Agenda del {format(dayDate, "dd/MM/yyyy")}
                         </CardTitle>
                         <CardDescription>Arrastra para cambiar el orden visual del día.</CardDescription>
                     </CardHeader>
@@ -316,6 +319,7 @@ export default function DoctorAppointmentsPage() {
                                             {orderedAppts.map((a, index) => {
                                                 const p = patients.find((x) => x.id === a.patientId);
                                                 const start = parseISO(a.startsAt);
+                                                // const end = parseISO(a.endsAt);
                                                 const end = parseISO(a.endsAt);
                                                 const isEditing = editingId === a.id;
 

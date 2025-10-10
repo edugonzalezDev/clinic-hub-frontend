@@ -30,9 +30,36 @@ export default function NewCertificatePage() {
         if (!canSave) return;
         const p = patients.find(x => x.id === patientId)!;
 
+        // const fileUrl = genCertificatePdf({
+        //     doctor: { name: doctor.name, license: doctor.license, signaturePng: doctor.signaturePng, stampPng: doctor.stampPng },
+        //     patient: { name: p.name, docId: p.docId },
+        //     body: {
+        //         reason,
+        //         recommendations: recommendations || undefined,
+        //         period: fromISO && toISO ? { fromISO, toISO } : undefined,
+        //     }
+        // });
+
+        // const id = addCertificate(patientId, {
+        //     reason,
+        //     recommendations: recommendations || undefined,
+        //     period: fromISO && toISO ? { fromISO, toISO } : undefined,
+        //     fileUrl
+        // });
+
+        // para certificados
+        const doctorSnap = {
+            name: doctor.name,
+            license: doctor.license,
+            signaturePng: doctor.signaturePng,
+            stampPng: doctor.stampPng,
+        };
+        const patientSnap = { name: p.name, docId: p.docId };
+
+        // generar y abrir ahora
         const fileUrl = genCertificatePdf({
-            doctor: { name: doctor.name, license: doctor.license, signaturePng: doctor.signaturePng, stampPng: doctor.stampPng },
-            patient: { name: p.name, docId: p.docId },
+            doctor: doctorSnap,
+            patient: patientSnap,
             body: {
                 reason,
                 recommendations: recommendations || undefined,
@@ -40,11 +67,14 @@ export default function NewCertificatePage() {
             }
         });
 
+        // persistir con snapshots (no rompe nada si luego no los usás)
         const id = addCertificate(patientId, {
             reason,
             recommendations: recommendations || undefined,
             period: fromISO && toISO ? { fromISO, toISO } : undefined,
-            fileUrl
+            fileUrl,
+            doctorSnapshot: doctorSnap,
+            patientSnapshot: patientSnap,
         });
 
         toast.success("Certificado generado");

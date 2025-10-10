@@ -36,18 +36,42 @@ export default function NewPrescriptionPage() {
     const onSave = () => {
         if (!canSave || !patient) return;
 
+        // const fileUrl = genPrescriptionPdf({
+        //     doctor: { name: doctor.name, license: doctor.license, signaturePng: doctor.signaturePng, stampPng: doctor.stampPng },
+        //     patient: { name: patient.name, docId: patient.docId, insurance: patient.insurance },
+        //     diagnosis: diagnosis || undefined,
+        //     items
+        // });
+
+        // const id = addPrescription(patientId, {
+        //     diagnosis: diagnosis || undefined,
+        //     items,
+        //     insuranceSnapshot: patient.insurance,
+        //     fileUrl
+        // });
+
+        const doctorSnap = {
+            name: doctor.name,
+            license: doctor.license,
+            signaturePng: doctor.signaturePng,
+            stampPng: doctor.stampPng,
+        };
+        const patientSnap = { name: patient.name, docId: patient.docId, insurance: patient.insurance };
+
         const fileUrl = genPrescriptionPdf({
-            doctor: { name: doctor.name, license: doctor.license, signaturePng: doctor.signaturePng, stampPng: doctor.stampPng },
-            patient: { name: patient.name, docId: patient.docId, insurance: patient.insurance },
+            doctor: doctorSnap,
+            patient: patientSnap,
             diagnosis: diagnosis || undefined,
-            items
+            items,
         });
 
         const id = addPrescription(patientId, {
             diagnosis: diagnosis || undefined,
             items,
             insuranceSnapshot: patient.insurance,
-            fileUrl
+            fileUrl,
+            doctorSnapshot: doctorSnap,
+            patientSnapshot: patientSnap,
         });
 
         toast.success("Receta generada");
