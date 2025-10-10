@@ -10,6 +10,8 @@ import { ConsultationsList } from "./components/ConsultationsList";
 import { MedicationsList } from "./components/MedicationsList";
 import { LabsList } from "./components/LabsList";
 import { VitalsList } from "./components/VitalsList";
+import PatientPrescriptionsTab from "../patients/tabs/PatientPrescriptionsTab";
+import PatientCertificatesTab from "../patients/tabs/PatientCertificatesTab";
 
 
 function fdate(iso: string) {
@@ -81,11 +83,14 @@ export default function MedicalHistoryPage() {
                 />
 
                 <Tabs defaultValue="consultations" className="space-y-6">
-                    <TabsList className="grid w-full grid-cols-4">
+                    <TabsList className="grid w-full h-auto grid-cols-3 gap-2 md:grid-cols-6 md:gap-2 ">
                         <TabsTrigger value="consultations">Consultas</TabsTrigger>
                         <TabsTrigger value="medications">Medicación</TabsTrigger>
                         <TabsTrigger value="labs">Laboratorio</TabsTrigger>
                         <TabsTrigger value="vitals">Signos vitales</TabsTrigger>
+
+                        <TabsTrigger value="reset">Recetas</TabsTrigger>
+                        <TabsTrigger value="certificate">Certificados</TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="consultations">
@@ -105,6 +110,13 @@ export default function MedicalHistoryPage() {
 
                     <TabsContent value="vitals">
                         <VitalsList items={record?.vitals ?? []} />
+                    </TabsContent>
+
+                    <TabsContent value="reset">
+                        <PatientPrescriptionsTab patientId={patient.id} />
+                    </TabsContent>
+                    <TabsContent value="certificate">
+                        <PatientCertificatesTab patientId={patient.id} />
                     </TabsContent>
                 </Tabs>
             </main>
