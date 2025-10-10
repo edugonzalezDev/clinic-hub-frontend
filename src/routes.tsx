@@ -25,29 +25,15 @@ function RequireAuth({ children }: PropsWithChildren) {
 }
 
 // Redirige según rol
-function RoleHome() {
-  const user = useAppStore((s) => s.currentUser);
-  if (!user) return <Navigate to="/login" replace />;
-  switch (user.role) {
-    case "doctor":
-      return <Navigate to="/doctor" replace />;
-    case "patient":
-      return <Navigate to="/patient" replace />;
-    case "admin":
-      return <Navigate to="/admin" replace />;
-    default:
-      return <Navigate to="/login" replace />;
-  }
-}
-
-// HomeGate: si hay sesión -> RoleHome, si no -> Landing
-function HomeGate() {
-  const user = useAppStore((s) => s.currentUser);
-  return user ? <RoleHome /> : <LandingPage />;
-}
-// function HomeGate({ children }: PropsWithChildren) {
+// function RoleHome() {
 //   const user = useAppStore((s) => s.currentUser);
-//   return user ? <RoleHome /> : <LandingPage />;
+//   if (!user) return <Navigate to="/login" replace />;
+//   switch (user.role) {
+//     case "doctor": return <Navigate to="/doctor" replace />;
+//     case "patient": return <Navigate to="/patient" replace />;
+//     case "admin": return <Navigate to="/admin" replace />;
+//     default: return <Navigate to="/login" replace />;
+//   }
 // }
 
 export default function AppRoutes() {
