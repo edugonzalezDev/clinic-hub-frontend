@@ -109,7 +109,7 @@ const AppointmentScheduler = () => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
+    <div className="bg-white rounded-lg shadow p-6 mt-6">
       <h3 className="text-lg font-semibold text-gray-900 mb-6">
         Agendar Nueva Cita
       </h3>

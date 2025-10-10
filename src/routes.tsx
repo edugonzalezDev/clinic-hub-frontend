@@ -16,6 +16,7 @@ import SignatureSettingsPage from "./features/doctor/SignatureSettingsPage";
 import NewPrescriptionPage from "./features/medical/NewPrescriptionPage";
 import NewCertificatePage from "./features/medical/NewCertificatePage";
 import PacienteDashboard from "./features/patient/pages/PatientDashboard";
+import MedicalHistory from "./features/patient/pages/MedicalHistory.tsx";
 
 function RequireAuth({ children }: PropsWithChildren) {
   const user = useAppStore((s) => s.currentUser);
@@ -143,7 +144,24 @@ export default function AppRoutes() {
       {/* admin */}
       {/* <Route path="/admin" element={<AdminDashboard />} /> */}
       {/* pacietes */}
-      {<Route path="/paciente" element={<PacienteDashboard />} />}
+      {
+        <Route
+          path="/paciente"
+          element={
+            <RequireAuth>
+              <PacienteDashboard />
+            </RequireAuth>
+          }
+        />
+      }
+      <Route
+        path="/paciente/historial-medico"
+        element={
+          <RequireAuth>
+            <MedicalHistory />
+          </RequireAuth>
+        }
+      />
       {/* compartidas */}
       {/* fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />
