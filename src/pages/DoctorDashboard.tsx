@@ -5,18 +5,10 @@ import { Calendar, Video, FileText, Users, LogOut, Activity, Clock, Award, Stamp
 import { Badge } from "@/components/ui/badge";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { useDndOrder } from "@/hooks/useDndOrder"; // <— nuevo
-
 import { parseISO, startOfToday, endOfToday, isWithinInterval, format, compareAsc } from "date-fns";
-
 import useAppStore from "@/store/appStore";
-import { useMemo } from "react";
-
-
-// function isSameDay(a: Date, b: Date) {
-//     return a.getFullYear() === b.getFullYear() &&
-//         a.getMonth() === b.getMonth() &&
-//         a.getDate() === b.getDate();
-// }
+import { useCallback, useMemo } from "react";
+import MiniMap from "@/components/clinic/MiniMap";
 
 function hhmm(d: Date) {
     return new Intl.DateTimeFormat(undefined, { hour: "2-digit", minute: "2-digit" }).format(d);
@@ -24,7 +16,10 @@ function hhmm(d: Date) {
 
 const DoctorDashboard = () => {
     const navigate = useNavigate();
-    const { currentUser, currentDoctorId, doctors, patients, appointments, logout } = useAppStore();
+    const { currentUser, currentDoctorId, doctors, patients, appointments, clinics, currentClinicId, setCurrentClinic, logout } = useAppStore();
+
+    const clinic = useMemo(() => clinics.find(c => c.id === currentClinicId) ?? clinics[0], [clinics, currentClinicId]);
+
 
     // Detectar el ID del doctor actual (persistido o por nombre; fallback al primero)
     const doctorId = useMemo(() => {
@@ -35,32 +30,53 @@ const DoctorDashboard = () => {
         );
     }, [currentDoctorId, doctors, currentUser?.name]);
 
-    // Citas de hoy para el doctor
-    // const todayAppts = useMemo(() => {
-    //     const today = new Date();
-    //     return appointments
-    //         .filter((a) => a.doctorId === doctorId && isSameDay(new Date(a.startsAt), today))
-    //         .sort((a, b) => +new Date(a.startsAt) - +new Date(b.startsAt));
-    // }, [appointments, doctorId]);
+    // 👇 compat: incluir turnos sin clinicId (legado) o de la clínica activa
+    const matchesClinic = useCallback((clinicId?: string) => {
+        if (!currentClinicId) return true;        // si no hay clínica activa, mostramos todo
+        return clinicId === undefined || clinicId === currentClinicId;
+    }, [currentClinicId]);
+
+    const belongsToActiveClinic = useCallback((a: { clinicId?: string; patientId: string }) => {
+        if (!currentClinicId) return true;
+
+        // 1) si el turno tiene clinicId, exigimos match exacto
+        if (a.clinicId) return a.clinicId === currentClinicId;
+
+        // 2) si NO tiene clinicId, lo inferimos por el paciente
+        const p = patients.find(pt => pt.id === a.patientId);
+        return (p?.clinicIds ?? []).includes(currentClinicId);
+    }, [currentClinicId, patients]);
 
     // Citas de hoy por rango local (evita problemas de huso horario)
+    // const todayAppts = useMemo(() => {
+    //     const start = startOfToday();
+    //     const end = endOfToday();
+    //     return appointments
+    //         .filter((a) =>
+    //             a.doctorId === doctorId &&
+    //             matchesClinic(a.clinicId) &&
+    //             isWithinInterval(parseISO(a.startsAt), { start, end })
+    //         )
+    //         .sort((a, b) => compareAsc(parseISO(a.startsAt), parseISO(b.startsAt)));
+    // }, [appointments, doctorId, matchesClinic]);
+
     const todayAppts = useMemo(() => {
         const start = startOfToday();
         const end = endOfToday();
         return appointments
-            .filter((a) =>
+            .filter(a =>
                 a.doctorId === doctorId &&
+                belongsToActiveClinic(a) &&
                 isWithinInterval(parseISO(a.startsAt), { start, end })
             )
             .sort((a, b) => compareAsc(parseISO(a.startsAt), parseISO(b.startsAt)));
-    }, [appointments, doctorId]);
-
-
+    }, [appointments, doctorId, belongsToActiveClinic]);
 
     // storageKey determinística por fecha
     const storageKey = useMemo(
-        () => `agenda:${doctorId}:${format(new Date(), "yyyy-MM-dd")}`,
-        [doctorId]
+        // () => `agenda:${doctorId}:${format(new Date(), "yyyy-MM-dd")}`,
+        () => `agenda:${doctorId}:${format(new Date(), "yyyy-MM-dd")}:clinic:${currentClinicId ?? "all"}`,
+        [doctorId, currentClinicId]
     );
 
     const { ordered: orderedAppts, onDragEnd } = useDndOrder(
@@ -69,10 +85,18 @@ const DoctorDashboard = () => {
         storageKey
     );
 
+    // contadores
     const stats = [
         { label: "Turnos de hoy", value: String(todayAppts.length), icon: Calendar, color: "text-primary" },
-        { label: "Notas pendientes", value: "3", icon: FileText, color: "text-yellow-600" },
-        { label: "Pacientes totales", value: String(patients.length), icon: Users, color: "text-secondary" },
+        { label: "Notas pendientes", value: "0", icon: FileText, color: "text-yellow-600" },
+        {
+            label: "Pacientes totales", value: String(
+                // patients.filter(p => p.clinicIds?.includes(currentClinicId!)).length
+                currentClinicId
+                    ? patients.filter(p => (p.clinicIds ?? []).includes(currentClinicId)).length
+                    : patients.length
+            ), icon: Users, color: "text-secondary"
+        },
     ];
 
     const statusBadge = (status: string) => {
@@ -83,6 +107,7 @@ const DoctorDashboard = () => {
             default: return <Badge variant="outline">{status}</Badge>;
         }
     };
+
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
@@ -97,6 +122,17 @@ const DoctorDashboard = () => {
                             <h1 className="text-xl font-semibold">HealthConnect</h1>
                             <p className="text-sm text-muted-foreground">Portal de profesionales</p>
                         </div>
+                    </div>
+                    {/* seccion clinic name */}
+                    <div className="lg:flex items-center gap-2 hidden lg:solid ">
+                        <span className="text-sm text-muted-foreground font-semibold">Clínica:</span>
+                        <select
+                            className="h-8 rounded-md px-2 text-sm border-2 border-slate-400"
+                            value={clinic?.id ?? ""}
+                            onChange={(e) => setCurrentClinic(e.target.value)}
+                        >
+                            {clinics.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                        </select>
                     </div>
                     <Button
                         variant="ghost"
@@ -159,8 +195,8 @@ const DoctorDashboard = () => {
                                     <p className="text-sm text-muted-foreground">No hay turnos para hoy.</p>
                                 )}
 
-                                <DragDropContext onDragEnd={onDragEnd}>
-                                    <Droppable droppableId="todayAppts">
+                                <DragDropContext key={currentClinicId ?? "all"} onDragEnd={onDragEnd}>
+                                    <Droppable droppableId={`todayAppts:${currentClinicId ?? "all"}`}>
                                         {(dropProvided) => (
                                             <div ref={dropProvided.innerRef} {...dropProvided.droppableProps} className="space-y-3">
                                                 {orderedAppts.map((a, index) => {
@@ -266,6 +302,22 @@ const DoctorDashboard = () => {
                         </Card>
                     </div>
                 </div>
+                {/* maps clinic */}
+                {clinic && (
+                    <Card className="shadow-md">
+                        <CardHeader>
+                            <CardTitle className="text-base">Sede actual</CardTitle>
+                            <CardDescription>{clinic.name}</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-2">
+                            <p className="text-sm text-muted-foreground">
+                                {clinic.address}{clinic.city ? ` • ${clinic.city}` : ""}{clinic.phone ? ` • ${clinic.phone}` : ""}
+                            </p>
+                            {clinic.geo && <MiniMap lat={clinic.geo.lat} lng={clinic.geo.lng} />}
+                        </CardContent>
+                    </Card>
+                )}
+
             </main>
         </div>
     );

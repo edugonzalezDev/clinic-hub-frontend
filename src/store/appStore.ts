@@ -7,6 +7,16 @@ import { addMinutes } from "date-fns";
 export type Role = "patient" | "doctor" | "admin";
 export interface User { id: string; name: string; role: Role; email?: string; }
 
+// + Nuevo tipo
+export interface Clinic {
+    id: string;
+    name: string;
+    address?: string;
+    city?: string;
+    phone?: string;
+    geo?: { lat: number; lng: number };
+}
+
 export interface Doctor {
     id: string;
     name: string;
@@ -15,6 +25,8 @@ export interface Doctor {
     license?: string;          // matrícula/colegiatura
     signaturePng?: string; //url png sin fondo (firma)
     stampPng?: string;  //png sin fondo (sello)
+    clinicIds?: string[]; // 👈 nuevo
+
 }
 export interface Patient {
     id: string;
@@ -27,6 +39,7 @@ export interface Patient {
         plan?: string;
         memberId?: string;       // nro. afiliado / póliza
     };
+    clinicIds?: string[]; // 👈 nuevo
 }
 
 export type DoctorSnapshot = {
@@ -128,6 +141,7 @@ export interface Appointment {
     endsAt: string;
     type: "presencial" | "virtual";
     status: "pending" | "confirmed" | "cancelled";
+    clinicId?: string; // 👈 nuevo
 }
 
 /** Usuario “auth” (solo mock) */
@@ -152,11 +166,13 @@ interface AppState {
     currentUser?: User;
     currentPatientId?: string;
     currentDoctorId?: string;
+    currentClinicId?: string; // 👈 nuevo
     accessToken?: string;
     refreshToken?: string;
 
     // “BD” mock
     users: AuthUser[];
+    clinics: Clinic[];         // 👈 nuevo
     doctors: Doctor[];
     patients: Patient[];
     appointments: Appointment[];
@@ -223,20 +239,48 @@ interface AppState {
             & { dateISO?: string; fileUrl?: string }
     ) => string;
 
+    // acciones clínicas
+    setCurrentClinic: (clinicId: string) => void;
+    assignDoctorToClinic: (doctorId: string, clinicId: string) => void;
+    assignPatientToClinic: (patientId: string, clinicId: string) => void;
+    unassignDoctorFromClinic: (doctorId: string, clinicId: string) => void;
+    unassignPatientFromClinic: (patientId: string, clinicId: string) => void;
+
 }
+
+const seedClinics: Clinic[] = [
+    {
+        id: "c1",
+        name: "Hospital Privado Regional del Sur",
+        address: "20 de Febrero 598",
+        city: "San Carlos de Bariloche, Río Negro",
+        phone: "+54 2944 525000",
+        geo: { lat: -41.13726414478574, lng: -71.31203699238564 },
+    },
+    {
+        id: "c2",
+        name: "Hospital Zonal Dr. Ramón Carrillo",
+        address: "Francisco Pascasio Moreno 601",
+        city: "San Carlos de Bariloche, Río Negro",
+        phone: "+54 2944 426100",
+        geo: { lat: -41.13620671740496, lng: -71.3000110554434 },
+    }
+];
 
 /** Seeds demo */
 const seedDoctors: Doctor[] = [
-    { id: "d1", name: "Dra. Sofía Pérez", specialty: "Clínica", color: "#A7D8F0" },
-    { id: "d2", name: "Dr. Martín Gómez", specialty: "Pediatría", color: "#BEE7C8" },
-    { id: "d3", name: "Dra. Laura Martínez", specialty: "Ginecología", color: "#FAD2CF" },
+    { id: "d1", name: "Dra. Sofía Pérez", specialty: "Clínica", color: "#A7D8F0", clinicIds: ["c1"] },
+    { id: "d2", name: "Dr. Martín Gómez", specialty: "Pediatría", color: "#BEE7C8", clinicIds: ["c1"] },
+    { id: "d3", name: "Dra. Laura Martínez", specialty: "Ginecología", color: "#FAD2CF", clinicIds: ["c2"] },
+    { id: "d4", name: "Dr. Carlos Sánchez", specialty: "Cardiología", color: "#F0E1D1", clinicIds: ["c2"] },
 ];
 const seedPatients: Patient[] = [
-    { id: "p1", name: "Juan Ramírez", docId: "34.567.890", phone: "+54 9 294 123", notes: "Alergia a penicilina" },
-    { id: "p2", name: "Ana Díaz", docId: "29.111.222", phone: "+54 9 2944396777", notes: "Alergia a penicilina" },
-    { id: "p3", name: "Carlos Rodríguez", docId: "XX.333.444", phone: "+54 9 294 123", notes: "Alergia a penicilina" },
-    { id: "p4", name: "María López", docId: "XX.555.666", phone: "+54 9 294 123", notes: "Alergia a penicilina" },
-    { id: "p5", name: "Pedro Gómez", docId: "XX.777.888", phone: "+54 9 294 123", notes: "Alergia a penicilina" },
+    { id: "p1", name: "Juan Ramírez", docId: "34.567.890", phone: "+54 9 294 123", notes: "Alergia a penicilina", clinicIds: ["c1"] },
+    { id: "p2", name: "Ana Díaz", docId: "29.111.222", phone: "+54 9 2944396777", notes: "Alergia a penicilina", clinicIds: ["c1"] },
+    { id: "p3", name: "Carlos Rodríguez", docId: "XX.333.444", phone: "+54 9 294 123", notes: "Alergia a penicilina", clinicIds: ["c1"] },
+    { id: "p4", name: "María López", docId: "XX.555.666", phone: "+54 9 294 123", notes: "Alergia a penicilina", clinicIds: ["c1"] },
+    { id: "p5", name: "Pedro Gómez", docId: "XX.777.888", phone: "+54 9 294 123", notes: "Alergia a penicilina", clinicIds: ["c2"] },
+    { id: "p6", name: "Laura Sánchez", docId: "XX.999.000", phone: "+54 9 294 123", notes: "Alergia a penicilina", clinicIds: ["c2"] },
 ];
 const seedAppointments: Appointment[] = [
     {
@@ -399,6 +443,8 @@ const seedClinical: Record<string, ClinicalRecord> = {
     }
 };
 
+
+
 const useAppStore = create<AppState>()(
     persist(
         (set, get) => ({
@@ -411,13 +457,13 @@ const useAppStore = create<AppState>()(
 
             // datos
             users: seedUsers,
+            clinics: seedClinics,
             doctors: seedDoctors,
             patients: seedPatients,
             appointments: seedAppointments,
             waitlist: [{ id: "w1", patientId: "p2", reason: "Consulta prioritaria" }],
 
             clinicalRecords: seedClinical,
-
             // ---- Acciones de sesión ----
             register: (p) => {
                 const { email, dni, full_name, role } = p;
@@ -494,11 +540,13 @@ const useAppStore = create<AppState>()(
                     x => x.email.toLowerCase() === email.toLowerCase() && x.password === password
                 );
                 if (!u) return { ok: false as const, error: "Credenciales inválidas." };
-
+                const s = get();
+                const doc = u.linkedDoctorId ? s.doctors.find(d => d.id === u.linkedDoctorId) : undefined;
                 set({
                     currentUser: { id: u.id, name: u.name, role: u.role, email: u.email },
                     currentDoctorId: u.linkedDoctorId,
                     currentPatientId: u.linkedPatientId,
+                    currentClinicId: doc?.clinicIds?.[0] ?? s.currentClinicId ?? s.clinics[0]?.id, // 👈
                     accessToken: "mock.access.token",
                     refreshToken: "mock.refresh.token",
                 });
@@ -534,7 +582,12 @@ const useAppStore = create<AppState>()(
             },
 
             // ---- Negocio ----
-            addAppointment: (a) => set({ appointments: [...get().appointments, a] }),
+            // addAppointment: (a) => set({ appointments: [...get().appointments, a] }),
+            // Al crear turnos, guardar clinicId activa (sin romper compat)
+            addAppointment: (a) =>
+                set(s => ({
+                    appointments: [...s.appointments, { ...a, clinicId: a.clinicId ?? s.currentClinicId }]
+                })),
 
             moveWaitlist: (from, to) => set((s) => {
                 const items = [...s.waitlist];
@@ -683,7 +736,39 @@ const useAppStore = create<AppState>()(
                 });
                 return id;
             },
+            setCurrentClinic: (clinicId) => set({ currentClinicId: clinicId }),
 
+            assignDoctorToClinic: (doctorId, clinicId) =>
+                set(s => ({
+                    doctors: s.doctors.map(d => d.id === doctorId
+                        ? { ...d, clinicIds: Array.from(new Set([...(d.clinicIds ?? []), clinicId])) }
+                        : d
+                    )
+                })),
+
+            unassignDoctorFromClinic: (doctorId, clinicId) =>
+                set(s => ({
+                    doctors: s.doctors.map(d => d.id === doctorId
+                        ? { ...d, clinicIds: (d.clinicIds ?? []).filter(id => id !== clinicId) }
+                        : d
+                    )
+                })),
+
+            assignPatientToClinic: (patientId, clinicId) =>
+                set(s => ({
+                    patients: s.patients.map(p => p.id === patientId
+                        ? { ...p, clinicIds: Array.from(new Set([...(p.clinicIds ?? []), clinicId])) }
+                        : p
+                    )
+                })),
+
+            unassignPatientFromClinic: (patientId, clinicId) =>
+                set(s => ({
+                    patients: s.patients.map(p => p.id === patientId
+                        ? { ...p, clinicIds: (p.clinicIds ?? []).filter(id => id !== clinicId) }
+                        : p
+                    )
+                })),
         }),
         {
             name: "hc/app-store",
@@ -694,9 +779,11 @@ const useAppStore = create<AppState>()(
                 currentUser: s.currentUser,
                 currentPatientId: s.currentPatientId,
                 currentDoctorId: s.currentDoctorId,
+                currentClinicId: s.currentClinicId,     // 👈
                 accessToken: s.accessToken,
                 refreshToken: s.refreshToken,
                 users: s.users,
+                clinics: s.clinics,                      // 👈
                 doctors: s.doctors,
                 patients: s.patients,
                 appointments: s.appointments,
