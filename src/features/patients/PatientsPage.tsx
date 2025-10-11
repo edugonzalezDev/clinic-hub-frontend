@@ -21,7 +21,9 @@ function lastConsultDate(patientId: string, clinicalRecords: ReturnType<typeof u
 
 export default function PatientsPage() {
     const navigate = useNavigate();
-    const { patients, clinicalRecords, addPatient } = useAppStore();
+    const { patients, clinicalRecords, currentClinicId, clinics, addPatient, setCurrentClinic } = useAppStore();
+    const [onlyClinic] = useState(true);
+
     const [q, setQ] = useState("");
     const [openNew, setOpenNew] = useState(false);
 
@@ -30,15 +32,13 @@ export default function PatientsPage() {
     const [docId, setDocId] = useState("");
     const [phone, setPhone] = useState("");
 
-    const filtered = useMemo(() => {
-        const query = q.trim().toLowerCase();
-        if (!query) return patients;
-        return patients.filter(
-            (p) =>
-                p.name.toLowerCase().includes(query) ||
-                p.docId.toLowerCase().includes(query)
-        );
-    }, [patients, q]);
+    const clinic = useMemo(() => clinics.find(c => c.id === currentClinicId) ?? clinics[0], [clinics, currentClinicId]);
+
+
+    const list = useMemo(() => {
+        if (!onlyClinic || !currentClinicId) return patients;
+        return patients.filter(p => (p.clinicIds ?? []).includes(currentClinicId));
+    }, [patients, onlyClinic, currentClinicId]);
 
     const onCreate = () => {
         if (!name.trim() || !docId.trim()) return;
@@ -69,6 +69,17 @@ export default function PatientsPage() {
                                 <p className="text-sm text-muted-foreground">Listado y acciones rápidas</p>
                             </div>
                         </div>
+                    </div>
+                    {/* seccion clinic name */}
+                    <div className="lg:flex items-center gap-2 hidden lg:solid ">
+                        <span className="text-sm text-muted-foreground font-semibold">Clínica:</span>
+                        <select
+                            className="h-8 rounded-md px-2 text-sm border-2 border-slate-400"
+                            value={clinic?.id ?? ""}
+                            onChange={(e) => setCurrentClinic(e.target.value)}
+                        >
+                            {clinics.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                        </select>
                     </div>
                     <Dialog open={openNew} onOpenChange={setOpenNew}>
                         <DialogTrigger asChild>
@@ -116,7 +127,7 @@ export default function PatientsPage() {
                                 />
                             </div>
                             <Badge variant="secondary" className="ml-auto">
-                                <Users className="w-4 h-4 mr-1" /> {filtered.length} paciente{filtered.length === 1 ? "" : "s"}
+                                <Users className="w-4 h-4 mr-1" /> {list.length} paciente{list.length === 1 ? "" : "s"}
                             </Badge>
                         </div>
                     </CardContent>
@@ -124,7 +135,7 @@ export default function PatientsPage() {
 
                 {/* Listado */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {filtered.map((p) => {
+                    {list.map((p) => {
                         const last = lastConsultDate(p.id, clinicalRecords);
                         return (
                             <Card key={p.id} className="shadow-md hover:shadow-lg transition-shadow">
@@ -166,7 +177,7 @@ export default function PatientsPage() {
                     })}
                 </div>
 
-                {filtered.length === 0 && (
+                {list.length === 0 && (
                     <Card className="shadow-sm">
                         <CardContent className="py-10 text-center text-muted-foreground">
                             No se encontraron pacientes para “{q}”.

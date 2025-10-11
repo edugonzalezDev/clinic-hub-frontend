@@ -1,5 +1,5 @@
 // src/features/scheduling/DoctorAppointmentsPage.tsx
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -48,27 +48,25 @@ export default function DoctorAppointmentsPage() {
 
     // filtro por día (yyyy-MM-dd)
     const [day, setDay] = useState<string>(() => format(new Date(), "yyyy-MM-dd"));
-    useEffect(() => {
-        // sanity: si cambia doctor, mantenemos el día actual
-    }, [doctorId]);
-
-    // const dayStart = useMemo(() => startOfDay(new Date(day)), [day]);
-    // const dayEnd = useMemo(() => endOfDay(new Date(day)), [day]);
-
-    // Después (día local, sin shift de huso)
     const dayDate = useMemo(() => parse(day, "yyyy-MM-dd", new Date()), [day]);
     const dayStart = useMemo(() => startOfDay(dayDate), [dayDate]);
     const dayEnd = useMemo(() => endOfDay(dayDate), [dayDate]);
+
+    const matchesClinic = useCallback((clinicId?: string) => {
+        if (!currentClinicId) return true;
+        return clinicId === undefined || clinicId === currentClinicId;
+    }, [currentClinicId]);
 
     const dayAppts = useMemo(() => {
         return appointments
             .filter(
                 (a) =>
                     a.doctorId === doctorId &&
+                    matchesClinic(a.clinicId) &&
                     isWithinInterval(parseISO(a.startsAt), { start: dayStart, end: dayEnd })
             )
             .sort((a, b) => compareAsc(parseISO(a.startsAt), parseISO(b.startsAt)));
-    }, [appointments, doctorId, dayStart, dayEnd]);
+    }, [appointments, doctorId, dayStart, dayEnd, matchesClinic]);
 
     // Orden persistido por fecha+doctor
     const storageKey = useMemo(() => `agenda:${doctorId}:${day}`, [doctorId, day]);
@@ -79,9 +77,7 @@ export default function DoctorAppointmentsPage() {
     const [newPatientId, setNewPatientId] = useState<string>(patients[0]?.id ?? "");
     const [newStart, setNewStart] = useState<string>(() => `${day}T09:00`);
     const [newDuration, setNewDuration] = useState<number>(20);
-    // const [newType, setNewType] = useState<"virtual" | "presencial">("virtual");
-    // const [newStatus, setNewStatus] = useState<"pending" | "confirmed" | "cancelled">("confirmed");
-    // estado TIPADO
+
     const [newType, setNewType] = useState<Appointment["type"]>("virtual");
     const [newStatus, setNewStatus] = useState<Appointment["status"]>("confirmed");
 
@@ -116,7 +112,7 @@ export default function DoctorAppointmentsPage() {
             endsAt: endsISO,
             type: newType,
             status: newStatus,
-            clinicId: currentClinicId, // 👈 traer de store
+            clinicId: currentClinicId ?? undefined,   // 👈 importante
         });
 
         toast.success("Turno creado");
@@ -153,6 +149,8 @@ export default function DoctorAppointmentsPage() {
             endsAt: endISO,
             type: editType,
             status: editStatus,
+            clinicId: currentClinicId ?? undefined,   // 👈 mantener la sede
+
         });
         setEditingId(null);
         toast.success("Turno actualizado");
