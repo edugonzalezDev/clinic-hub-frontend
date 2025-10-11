@@ -31,6 +31,7 @@ export default function DoctorAppointmentsPage() {
         doctors,
         patients,
         appointments,
+        currentClinicId,
         addAppointment,
         updateAppointment,
         deleteAppointment,
@@ -115,6 +116,7 @@ export default function DoctorAppointmentsPage() {
             endsAt: endsISO,
             type: newType,
             status: newStatus,
+            clinicId: currentClinicId, // 👈 traer de store
         });
 
         toast.success("Turno creado");

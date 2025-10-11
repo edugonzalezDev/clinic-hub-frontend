@@ -10,6 +10,7 @@ import { parseISO, startOfToday, endOfToday, isWithinInterval, format, compareAs
 
 import useAppStore from "@/store/appStore";
 import { useMemo } from "react";
+import MiniMap from "@/components/clinic/MiniMap";
 
 
 // function isSameDay(a: Date, b: Date) {
@@ -24,7 +25,10 @@ function hhmm(d: Date) {
 
 const DoctorDashboard = () => {
     const navigate = useNavigate();
-    const { currentUser, currentDoctorId, doctors, patients, appointments, logout } = useAppStore();
+    const { currentUser, currentDoctorId, doctors, patients, appointments, clinics, currentClinicId, setCurrentClinic, logout } = useAppStore();
+
+    const clinic = useMemo(() => clinics.find(c => c.id === currentClinicId) ?? clinics[0], [clinics, currentClinicId]);
+
 
     // Detectar el ID del doctor actual (persistido o por nombre; fallback al primero)
     const doctorId = useMemo(() => {
@@ -97,6 +101,17 @@ const DoctorDashboard = () => {
                             <h1 className="text-xl font-semibold">HealthConnect</h1>
                             <p className="text-sm text-muted-foreground">Portal de profesionales</p>
                         </div>
+                    </div>
+                    {/* seccion clinic name */}
+                    <div className="lg:flex items-center gap-2 hidden lg:solid ">
+                        <span className="text-sm text-muted-foreground font-semibold">Clínica:</span>
+                        <select
+                            className="h-8 rounded-md px-2 text-sm border-2 border-slate-400"
+                            value={clinic?.id ?? ""}
+                            onChange={(e) => setCurrentClinic(e.target.value)}
+                        >
+                            {clinics.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                        </select>
                     </div>
                     <Button
                         variant="ghost"
@@ -266,6 +281,22 @@ const DoctorDashboard = () => {
                         </Card>
                     </div>
                 </div>
+                {/* maps clinic */}
+                {clinic && (
+                    <Card className="shadow-md">
+                        <CardHeader>
+                            <CardTitle className="text-base">Sede actual</CardTitle>
+                            <CardDescription>{clinic.name}</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-2">
+                            <p className="text-sm text-muted-foreground">
+                                {clinic.address}{clinic.city ? ` • ${clinic.city}` : ""}{clinic.phone ? ` • ${clinic.phone}` : ""}
+                            </p>
+                            {clinic.geo && <MiniMap lat={clinic.geo.lat} lng={clinic.geo.lng} />}
+                        </CardContent>
+                    </Card>
+                )}
+
             </main>
         </div>
     );
