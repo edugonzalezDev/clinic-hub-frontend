@@ -120,7 +120,7 @@ export type Vital = {
     metric: string;
     value: string;
     dateISO: string;
-    status?: string;
+    status?: "Normal" | "Alto" | "Bajo";
 };
 
 export type ClinicalRecord = {
@@ -245,6 +245,21 @@ interface AppState {
     assignPatientToClinic: (patientId: string, clinicId: string) => void;
     unassignDoctorFromClinic: (doctorId: string, clinicId: string) => void;
     unassignPatientFromClinic: (patientId: string, clinicId: string) => void;
+
+    addMedicationEntry: (
+        patientId: string,
+        data: Omit<Medication, "id">
+    ) => string;
+
+    addLabResult: (
+        patientId: string,
+        data: Omit<LabResult, "id">
+    ) => string;
+
+    addVitalSign: (
+        patientId: string,
+        data: Omit<Vital, "id">
+    ) => string;
 
 }
 
@@ -769,6 +784,50 @@ const useAppStore = create<AppState>()(
                         : p
                     )
                 })),
+
+            // para la seccion historia clinica
+            addMedicationEntry: (patientId, data) => {
+                const id = `m-${crypto.randomUUID()}`;
+                const s = get();
+                const cur = s.clinicalRecords[patientId] ?? { consultations: [], medications: [], labs: [], vitals: [] };
+                const next: Medication = { id, ...data };
+                set({
+                    clinicalRecords: {
+                        ...s.clinicalRecords,
+                        [patientId]: { ...cur, medications: [...(cur.medications ?? []), next] }
+                    }
+                });
+                return id;
+            },
+
+            addLabResult: (patientId, data) => {
+                const id = `l-${crypto.randomUUID()}`;
+                const s = get();
+                const cur = s.clinicalRecords[patientId] ?? { consultations: [], medications: [], labs: [], vitals: [] };
+                const next: LabResult = { id, ...data };
+                set({
+                    clinicalRecords: {
+                        ...s.clinicalRecords,
+                        [patientId]: { ...cur, labs: [...(cur.labs ?? []), next] }
+                    }
+                });
+                return id;
+            },
+
+            addVitalSign: (patientId, data) => {
+                const id = `v-${crypto.randomUUID()}`;
+                const s = get();
+                const cur = s.clinicalRecords[patientId] ?? { consultations: [], medications: [], labs: [], vitals: [] };
+                const next: Vital = { id, ...data };
+                set({
+                    clinicalRecords: {
+                        ...s.clinicalRecords,
+                        [patientId]: { ...cur, vitals: [...(cur.vitals ?? []), next] }
+                    }
+                });
+                return id;
+            },
+
         }),
         {
             name: "hc/app-store",

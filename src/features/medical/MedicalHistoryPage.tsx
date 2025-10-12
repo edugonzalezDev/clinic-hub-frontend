@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useNavigate, useParams } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, Activity } from "lucide-react";
+import { ArrowLeft, Activity, Plus } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import useAppStore from "@/store/appStore";
 import { PatientHeader } from "./components/PatientHeader";
@@ -100,15 +100,42 @@ export default function MedicalHistoryPage() {
                         />
                     </TabsContent>
 
+                    {/* <TabsContent value="medications">
+                        <MedicationsList items={record?.medications ?? []} />
+                    </TabsContent> */}
                     <TabsContent value="medications">
+                        <div className="flex justify-end mb-3">
+                            <Button variant="outline" size="sm"
+                                onClick={() => navigate(`/doctor/medications/new?patientId=${patient.id}`)}>
+                                <Plus className="w-4 h-4 mr-1" /> Nuevo medicamento
+                            </Button>
+                        </div>
                         <MedicationsList items={record?.medications ?? []} />
                     </TabsContent>
 
+                    {/* <TabsContent value="labs">
+                        <LabsList items={record?.labs ?? []} />
+                    </TabsContent> */}
                     <TabsContent value="labs">
+                        <div className="flex justify-end mb-3">
+                            <Button variant="outline" size="sm"
+                                onClick={() => navigate(`/doctor/labs/new?patientId=${patient.id}`)}>
+                                <Plus className="w-4 h-4 mr-1" /> Nuevo estudio
+                            </Button>
+                        </div>
                         <LabsList items={record?.labs ?? []} />
                     </TabsContent>
 
+                    {/* <TabsContent value="vitals">
+                        <VitalsList items={record?.vitals ?? []} />
+                    </TabsContent> */}
                     <TabsContent value="vitals">
+                        <div className="flex justify-end mb-3">
+                            <Button variant="outline" size="sm"
+                                onClick={() => navigate(`/doctor/vitals/new?patientId=${patient.id}`)}>
+                                <Plus className="w-4 h-4 mr-1" /> Nuevo registro
+                            </Button>
+                        </div>
                         <VitalsList items={record?.vitals ?? []} />
                     </TabsContent>
 
