@@ -32,9 +32,12 @@ export default function DoctorAppointmentsPage() {
         patients,
         appointments,
         currentClinicId,
+        clinics,
+        setCurrentClinic,
         addAppointment,
         updateAppointment,
         deleteAppointment,
+
     } = useAppStore();
 
     // doctor actual (fallback al primero)
@@ -57,20 +60,39 @@ export default function DoctorAppointmentsPage() {
         return clinicId === undefined || clinicId === currentClinicId;
     }, [currentClinicId]);
 
+    const clinic = useMemo(() => clinics.find(c => c.id === currentClinicId) ?? clinics[0], [clinics, currentClinicId]);
+
+    const belongsToActiveClinic = useCallback((a: { clinicId?: string; patientId: string }) => {
+        if (!currentClinicId) return true;              // sin clínica activa, mostrar todo
+        if (a.clinicId) return a.clinicId === currentClinicId; // turno con clinicId: match estricto
+        const p = patients.find(pt => pt.id === a.patientId);  // turno legacy: infiero por paciente
+        return (p?.clinicIds ?? []).includes(currentClinicId);
+    }, [currentClinicId, patients]);
+
     const dayAppts = useMemo(() => {
         return appointments
-            .filter(
-                (a) =>
-                    a.doctorId === doctorId &&
-                    matchesClinic(a.clinicId) &&
-                    isWithinInterval(parseISO(a.startsAt), { start: dayStart, end: dayEnd })
+            .filter(a =>
+                a.doctorId === doctorId &&
+                belongsToActiveClinic(a) &&
+                isWithinInterval(parseISO(a.startsAt), { start: dayStart, end: dayEnd })
             )
             .sort((a, b) => compareAsc(parseISO(a.startsAt), parseISO(b.startsAt)));
-    }, [appointments, doctorId, dayStart, dayEnd, matchesClinic]);
+    }, [appointments, doctorId, dayStart, dayEnd, belongsToActiveClinic]);
 
-    // Orden persistido por fecha+doctor
-    const storageKey = useMemo(() => `agenda:${doctorId}:${day}`, [doctorId, day]);
+
+
+    // // Orden persistido por fecha+doctor
+    // const storageKey = useMemo(() => `agenda:${doctorId}:${day}`, [doctorId, day]);
+    // const { ordered: orderedAppts, onDragEnd } = useDndOrder(dayAppts, (a) => a.id, storageKey);
+
+    // storageKey por doctor+día+clínica
+    const storageKey = useMemo(
+        () => `agenda:${doctorId}:${day}:clinic:${currentClinicId ?? "all"}`,
+        [doctorId, day, currentClinicId]
+    );
+
     const { ordered: orderedAppts, onDragEnd } = useDndOrder(dayAppts, (a) => a.id, storageKey);
+
 
     // ---- creación de turno ----
     const [showNew, setShowNew] = useState(false);
@@ -156,6 +178,13 @@ export default function DoctorAppointmentsPage() {
         toast.success("Turno actualizado");
     };
 
+    // opciones de pacientes (solo de la clínica activa si hay)
+    const patientOptions = useMemo(() => {
+        if (!currentClinicId) return patients;
+        return patients.filter(p => (p.clinicIds ?? []).includes(currentClinicId));
+    }, [patients, currentClinicId]);
+
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
             {/* Header */}
@@ -175,6 +204,17 @@ export default function DoctorAppointmentsPage() {
                                 <p className="text-sm text-muted-foreground">Profesional: {doctors.find(d => d.id === doctorId)?.name ?? "—"}</p>
                             </div>
                         </div>
+                    </div>
+                    {/* seccion clinic name */}
+                    <div className="lg:flex items-center gap-2 hidden lg:solid ">
+                        <span className="text-sm text-muted-foreground font-semibold">Clínica:</span>
+                        <select
+                            className="h-8 rounded-md px-2 text-sm border-2 border-slate-400"
+                            value={clinic?.id ?? ""}
+                            onChange={(e) => setCurrentClinic(e.target.value)}
+                        >
+                            {clinics.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                        </select>
                     </div>
                     <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:gap-3">
                         <div className="flex items-center gap-2">
@@ -238,7 +278,7 @@ export default function DoctorAppointmentsPage() {
                                         value={newPatientId}
                                         onChange={(e) => setNewPatientId(e.target.value)}
                                     >
-                                        {patients.map((p) => (
+                                        {patientOptions.map((p) => (
                                             <option key={p.id} value={p.id}>{p.name}</option>
                                         ))}
                                     </select>
@@ -312,14 +352,13 @@ export default function DoctorAppointmentsPage() {
                         {orderedAppts.length === 0 ? (
                             <p className="text-sm text-muted-foreground">No hay turnos en este día.</p>
                         ) : (
-                            <DragDropContext onDragEnd={onDragEnd}>
-                                <Droppable droppableId="day">
+                            <DragDropContext key={currentClinicId ?? "all"} onDragEnd={onDragEnd}>
+                                <Droppable droppableId={`day:${currentClinicId ?? "all"}`}>
                                     {(dropProvided) => (
                                         <div ref={dropProvided.innerRef} {...dropProvided.droppableProps} className="space-y-3">
                                             {orderedAppts.map((a, index) => {
                                                 const p = patients.find((x) => x.id === a.patientId);
                                                 const start = parseISO(a.startsAt);
-                                                // const end = parseISO(a.endsAt);
                                                 const end = parseISO(a.endsAt);
                                                 const isEditing = editingId === a.id;
 
