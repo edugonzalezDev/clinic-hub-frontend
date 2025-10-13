@@ -6,8 +6,19 @@ import { openPrescriptionPdf } from "@/features/medical/pdfActions";
 import { genPrescriptionPdf } from "@/lib/pdf";
 import { toast } from "sonner";
 import type { Prescription } from "@/store/appStore";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useState } from "react";
 
 export default function PatientPrescriptionsTab({ patientId }: { patientId: string }) {
+    // --- edición de receta ---
+    type DraftItem = { drug: string; dose: string; frequency: string; duration: string; notes?: string };
+
+    const [editing, setEditing] = useState<null | Prescription>(null);
+    const [diag, setDiag] = useState<string>("");
+    const [rows, setRows] = useState<DraftItem[]>([]);
+
     const {
         clinicalRecords,
         doctors,
@@ -70,6 +81,67 @@ export default function PatientPrescriptionsTab({ patientId }: { patientId: stri
         toast.success("Receta eliminada");
     };
 
+
+
+    function startEdit(rx: Prescription) {
+        setEditing(rx);
+        setDiag(rx.diagnosis ?? "");
+        setRows(rx.items.map(i => ({ ...i })));
+    }
+
+    function updateRow(i: number, patch: Partial<DraftItem>) {
+        setRows(prev => prev.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
+    }
+    function addRow() {
+        setRows(prev => [...prev, { drug: "", dose: "", frequency: "", duration: "", notes: "" }]);
+    }
+    function removeRow(i: number) {
+        setRows(prev => prev.filter((_, idx) => idx !== i));
+    }
+
+    function doctorForRegen(rx: Prescription) {
+        const picked =
+            doctors.find(d => d.id === currentDoctorId) ??
+            doctors.find(d => d.id === rx.doctorId) ??
+            doctors[0];
+
+        return picked
+            ? {
+                name: picked.name,
+                license: picked.license,
+                signaturePng: picked.signaturePng,
+                stampPng: picked.stampPng,
+            }
+            : { name: "—" as const };
+    }
+
+    function patientForRegen(rx: Prescription) {
+        return rx.patientSnapshot
+            ? { ...rx.patientSnapshot, insurance: rx.insuranceSnapshot }
+            : { name: "—", docId: "" };
+    }
+
+    function saveEdit() {
+        if (!editing) return;
+        // re-generar PDF con los cambios
+        const fileUrl = genPrescriptionPdf({
+            doctor: doctorForRegen(editing),
+            patient: patientForRegen(editing),
+            diagnosis: diag || undefined,
+            items: rows,
+        });
+        updatePrescription(patientId, editing.id, {
+            diagnosis: diag || undefined,
+            items: rows,
+            fileUrl,
+            dateISO: new Date().toISOString(),
+            doctorSnapshot: { name: doctorForRegen(editing).name },
+        });
+        toast.success("Receta actualizada y reemitida");
+        window.open(fileUrl, "_blank");
+        setEditing(null);
+    }
+
     return (
         <div className="space-y-4">
             {items.map((rx) => {
@@ -113,12 +185,18 @@ export default function PatientPrescriptionsTab({ patientId }: { patientId: stri
                                 <Button
                                     className="w-auto rounded-[4px] border border-slate-400 hover:border-blue-400"
                                     variant="outline"
-                                    onClick={() => onReemit(rx)}>
-                                    Reemitir PDF
+                                    onClick={() => startEdit(rx)}
+                                >
+                                    Editar
                                 </Button>
                                 <Button
-                                    variant="destructive"
-                                    onClick={() => onDelete(rx)}>
+                                    className="w-auto rounded-[4px] border border-slate-400 hover:border-blue-400"
+                                    variant="outline"
+                                    onClick={() => onReemit(rx)}
+                                >
+                                    Reemitir PDF
+                                </Button>
+                                <Button variant="destructive" onClick={() => onDelete(rx)}>
                                     Eliminar
                                 </Button>
                             </div>
@@ -126,6 +204,46 @@ export default function PatientPrescriptionsTab({ patientId }: { patientId: stri
                     </Card>
                 );
             })}
+            <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
+                <DialogContent className="max-w-3xl">
+                    <DialogHeader>
+                        <DialogTitle>Editar receta</DialogTitle>
+                    </DialogHeader>
+
+                    <div className="space-y-4">
+                        <div className="space-y-2">
+                            <Label>Diagnóstico (opcional)</Label>
+                            <Input value={diag} onChange={(e) => setDiag(e.target.value)} />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label>Medicamentos</Label>
+                            <div className="space-y-2">
+                                {rows.map((r, i) => (
+                                    <div key={i} className="grid md:grid-cols-5 gap-2 items-center">
+                                        <Input placeholder="Medicamento" value={r.drug} onChange={(e) => updateRow(i, { drug: e.target.value })} />
+                                        <Input placeholder="Dosis" value={r.dose} onChange={(e) => updateRow(i, { dose: e.target.value })} />
+                                        <Input placeholder="Frecuencia" value={r.frequency} onChange={(e) => updateRow(i, { frequency: e.target.value })} />
+                                        <Input placeholder="Duración" value={r.duration} onChange={(e) => updateRow(i, { duration: e.target.value })} />
+                                        <div className="flex gap-2">
+                                            <Input placeholder="Notas" value={r.notes ?? ""} onChange={(e) => updateRow(i, { notes: e.target.value })} />
+                                            <Button variant="outline" type="button" onClick={() => removeRow(i)}>–</Button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                            <Button variant="outline" type="button" onClick={addRow}>+ Agregar medicamento</Button>
+                        </div>
+                    </div>
+
+                    <DialogFooter className="mt-4">
+                        <Button variant="outline" type="button" onClick={() => setEditing(null)}>Cancelar</Button>
+                        <Button type="button" onClick={saveEdit}>Guardar y reemitir</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
+
     );
+
 }
