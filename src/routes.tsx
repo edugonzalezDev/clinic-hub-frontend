@@ -17,8 +17,6 @@ import NewPrescriptionPage from "./features/medical/NewPrescriptionPage";
 import NewCertificatePage from "./features/medical/NewCertificatePage";
 import PacienteDashboard from "./features/patient/pages/PatientDashboard";
 import MedicalHistory from "./features/patient/pages/MedicalHistory.tsx";
-import NewLabResultPage from "./features/medical/NewLabResultPage.tsx";
-import NewVitalPage from "./features/medical/NewVitalPage.tsx";
 
 function RequireAuth({ children }: PropsWithChildren) {
   const user = useAppStore((s) => s.currentUser);
@@ -130,11 +128,7 @@ export default function AppRoutes() {
         }
       />
 
-      <Route path="/doctor/labs/new" element={<NewLabResultPage />} />
-      <Route path="/doctor/vitals/new" element={<NewVitalPage />} />
-      {/* admin */}
-      {/* <Route path="/admin" element={<AdminDashboard />} /> */}
-      {/* pacietes */}
+
       {
         <Route
           path="/paciente"

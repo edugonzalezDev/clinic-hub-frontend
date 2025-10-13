@@ -55,10 +55,10 @@ export default function DoctorAppointmentsPage() {
     const dayStart = useMemo(() => startOfDay(dayDate), [dayDate]);
     const dayEnd = useMemo(() => endOfDay(dayDate), [dayDate]);
 
-    const matchesClinic = useCallback((clinicId?: string) => {
-        if (!currentClinicId) return true;
-        return clinicId === undefined || clinicId === currentClinicId;
-    }, [currentClinicId]);
+    // const matchesClinic = useCallback((clinicId?: string) => {
+    //     if (!currentClinicId) return true;
+    //     return clinicId === undefined || clinicId === currentClinicId;
+    // }, [currentClinicId]);
 
     const clinic = useMemo(() => clinics.find(c => c.id === currentClinicId) ?? clinics[0], [clinics, currentClinicId]);
 
@@ -104,11 +104,22 @@ export default function DoctorAppointmentsPage() {
     const [newStatus, setNewStatus] = useState<Appointment["status"]>("confirmed");
 
     // handlers TIPADOS
-    const onChangeType = (e: React.ChangeEvent<HTMLSelectElement>) =>
-        setNewType(e.target.value as Appointment["type"]);
+    // const onChangeType = (e: React.ChangeEvent<HTMLSelectElement>) =>
+    //     setNewType(e.target.value as Appointment["type"]);
 
-    const onChangeStatus = (e: React.ChangeEvent<HTMLSelectElement>) =>
+    // const onChangeStatus = (e: React.ChangeEvent<HTMLSelectElement>) =>
+    //     setNewStatus(e.target.value as Appointment["status"]);
+
+    const onChangeNewType = (e: React.ChangeEvent<HTMLSelectElement>) =>
+        setNewType(e.target.value as Appointment["type"]);
+    const onChangeNewStatus = (e: React.ChangeEvent<HTMLSelectElement>) =>
         setNewStatus(e.target.value as Appointment["status"]);
+
+    const onChangeEditType = (e: React.ChangeEvent<HTMLSelectElement>) =>
+        setEditType(e.target.value as Appointment["type"]);
+
+    const onChangeEditStatus = (e: React.ChangeEvent<HTMLSelectElement>) =>
+        setEditStatus(e.target.value as Appointment["status"]);
 
     // probando =)
 
@@ -305,9 +316,10 @@ export default function DoctorAppointmentsPage() {
                                     <Label>Tipo</Label>
                                     <select
                                         className="w-full border rounded-md h-10 px-3"
-                                        value={newType}
-                                        // onChange={(e) => setNewType(e.target.value as any)}
-                                        onChange={onChangeType}
+                                        // value={newType}
+                                        // // onChange={(e) => setNewType(e.target.value as any)}
+                                        // onChange={onChangeType}
+                                        value={newType} onChange={onChangeNewType}
 
                                     >
                                         <option value="virtual">Teleconsulta</option>
@@ -318,9 +330,10 @@ export default function DoctorAppointmentsPage() {
                                     <Label>Estado</Label>
                                     <select
                                         className="w-full border rounded-md h-10 px-3"
-                                        value={newStatus}
-                                        // onChange={(e) => setNewStatus(e.target.value as any)}
-                                        onChange={onChangeStatus}
+                                        // value={newStatus}
+                                        // // onChange={(e) => setNewStatus(e.target.value as any)}
+                                        // onChange={onChangeStatus}
+                                        value={newStatus} onChange={onChangeNewStatus}
 
                                     >
                                         <option value="confirmed">Confirmada</option>
@@ -456,9 +469,10 @@ export default function DoctorAppointmentsPage() {
                                                                             <Label>Tipo</Label>
                                                                             <select
                                                                                 className="w-full border rounded-md h-10 px-3"
-                                                                                value={editType}
-                                                                                // onChange={(e) => setEditType(e.target.value as any)}
-                                                                                onChange={onChangeType}
+                                                                                // value={editType}
+                                                                                // // onChange={(e) => setEditType(e.target.value as any)}
+                                                                                // onChange={onChangeType}
+                                                                                value={editType} onChange={onChangeEditType}
 
                                                                             >
                                                                                 <option value="virtual">Teleconsulta</option>
@@ -469,9 +483,10 @@ export default function DoctorAppointmentsPage() {
                                                                             <Label>Estado</Label>
                                                                             <select
                                                                                 className="w-full border rounded-md h-10 px-3"
-                                                                                value={editStatus}
-                                                                                // onChange={(e) => setEditStatus(e.target.value as any)}
-                                                                                onChange={onChangeStatus}
+                                                                                // value={editStatus}
+                                                                                // // onChange={(e) => setEditStatus(e.target.value as any)}
+                                                                                // onChange={onChangeStatus}
+                                                                                value={editStatus} onChange={onChangeEditStatus}
 
                                                                             >
                                                                                 <option value="confirmed">Confirmada</option>
