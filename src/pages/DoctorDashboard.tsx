@@ -30,11 +30,6 @@ const DoctorDashboard = () => {
         );
     }, [currentDoctorId, doctors, currentUser?.name]);
 
-    // 👇 compat: incluir turnos sin clinicId (legado) o de la clínica activa
-    const matchesClinic = useCallback((clinicId?: string) => {
-        if (!currentClinicId) return true;        // si no hay clínica activa, mostramos todo
-        return clinicId === undefined || clinicId === currentClinicId;
-    }, [currentClinicId]);
 
     const belongsToActiveClinic = useCallback((a: { clinicId?: string; patientId: string }) => {
         if (!currentClinicId) return true;
@@ -47,18 +42,6 @@ const DoctorDashboard = () => {
         return (p?.clinicIds ?? []).includes(currentClinicId);
     }, [currentClinicId, patients]);
 
-    // Citas de hoy por rango local (evita problemas de huso horario)
-    // const todayAppts = useMemo(() => {
-    //     const start = startOfToday();
-    //     const end = endOfToday();
-    //     return appointments
-    //         .filter((a) =>
-    //             a.doctorId === doctorId &&
-    //             matchesClinic(a.clinicId) &&
-    //             isWithinInterval(parseISO(a.startsAt), { start, end })
-    //         )
-    //         .sort((a, b) => compareAsc(parseISO(a.startsAt), parseISO(b.startsAt)));
-    // }, [appointments, doctorId, matchesClinic]);
 
     const todayAppts = useMemo(() => {
         const start = startOfToday();

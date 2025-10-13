@@ -120,7 +120,7 @@ export type Vital = {
     metric: string;
     value: string;
     dateISO: string;
-    status?: string;
+    status?: "Normal" | "Alto" | "Bajo";
 };
 
 export type ClinicalRecord = {
@@ -245,6 +245,33 @@ interface AppState {
     assignPatientToClinic: (patientId: string, clinicId: string) => void;
     unassignDoctorFromClinic: (doctorId: string, clinicId: string) => void;
     unassignPatientFromClinic: (patientId: string, clinicId: string) => void;
+
+    addMedicationEntry: (
+        patientId: string,
+        data: Omit<Medication, "id">
+    ) => string;
+
+    addLabResult: (
+        patientId: string,
+        data: Omit<LabResult, "id">
+    ) => string;
+
+    addVitalSign: (
+        patientId: string,
+        data: Omit<Vital, "id">
+    ) => string;
+
+    // MEDICATIONS
+    updateMedication: (patientId: string, id: string, patch: Partial<Medication>) => void;
+    deleteMedication: (patientId: string, id: string) => void;
+
+    // LABS
+    updateLab: (patientId: string, id: string, patch: Partial<LabResult>) => void;
+    deleteLab: (patientId: string, id: string) => void;
+
+    // VITALS
+    updateVital: (patientId: string, id: string, patch: Partial<Vital>) => void;
+    deleteVital: (patientId: string, id: string) => void;
 
 }
 
@@ -769,6 +796,98 @@ const useAppStore = create<AppState>()(
                         : p
                     )
                 })),
+
+            // para la seccion historia clinica
+            addMedicationEntry: (patientId, data) => {
+                const id = `m-${crypto.randomUUID()}`;
+                const s = get();
+                const cur = s.clinicalRecords[patientId] ?? { consultations: [], medications: [], labs: [], vitals: [] };
+                const next: Medication = { id, ...data };
+                set({
+                    clinicalRecords: {
+                        ...s.clinicalRecords,
+                        [patientId]: { ...cur, medications: [...(cur.medications ?? []), next] }
+                    }
+                });
+                return id;
+            },
+
+            addLabResult: (patientId, data) => {
+                const id = `l-${crypto.randomUUID()}`;
+                const s = get();
+                const cur = s.clinicalRecords[patientId] ?? { consultations: [], medications: [], labs: [], vitals: [] };
+                const next: LabResult = { id, ...data };
+                set({
+                    clinicalRecords: {
+                        ...s.clinicalRecords,
+                        [patientId]: { ...cur, labs: [...(cur.labs ?? []), next] }
+                    }
+                });
+                return id;
+            },
+
+            addVitalSign: (patientId, data) => {
+                const id = `v-${crypto.randomUUID()}`;
+                const s = get();
+                const cur = s.clinicalRecords[patientId] ?? { consultations: [], medications: [], labs: [], vitals: [] };
+                const next: Vital = { id, ...data };
+                set({
+                    clinicalRecords: {
+                        ...s.clinicalRecords,
+                        [patientId]: { ...cur, vitals: [...(cur.vitals ?? []), next] }
+                    }
+                });
+                return id;
+            },
+
+            // MEDICATIONS
+            updateMedication: (patientId, id, patch) => {
+                const s = get();
+                const rec = s.clinicalRecords[patientId];
+                if (!rec) return;
+                const meds = rec.medications.map(m => (m.id === id ? { ...m, ...patch } : m));
+                set({ clinicalRecords: { ...s.clinicalRecords, [patientId]: { ...rec, medications: meds } } });
+            },
+            deleteMedication: (patientId, id) => {
+                const s = get();
+                const rec = s.clinicalRecords[patientId];
+                if (!rec) return;
+                const meds = rec.medications.filter(m => m.id !== id);
+                set({ clinicalRecords: { ...s.clinicalRecords, [patientId]: { ...rec, medications: meds } } });
+            },
+
+            // LABS
+            updateLab: (patientId, id, patch) => {
+                const s = get();
+                const rec = s.clinicalRecords[patientId];
+                if (!rec) return;
+                const labs = rec.labs.map(l => (l.id === id ? { ...l, ...patch } : l));
+                set({ clinicalRecords: { ...s.clinicalRecords, [patientId]: { ...rec, labs } } });
+            },
+            deleteLab: (patientId, id) => {
+                const s = get();
+                const rec = s.clinicalRecords[patientId];
+                if (!rec) return;
+                const labs = rec.labs.filter(l => l.id !== id);
+                set({ clinicalRecords: { ...s.clinicalRecords, [patientId]: { ...rec, labs } } });
+            },
+
+            // VITALS
+            updateVital: (patientId, id, patch) => {
+                const s = get();
+                const rec = s.clinicalRecords[patientId];
+                if (!rec) return;
+                const vitals = rec.vitals.map(v => (v.id === id ? { ...v, ...patch } : v));
+                set({ clinicalRecords: { ...s.clinicalRecords, [patientId]: { ...rec, vitals } } });
+            },
+            deleteVital: (patientId, id) => {
+                const s = get();
+                const rec = s.clinicalRecords[patientId];
+                if (!rec) return;
+                const vitals = rec.vitals.filter(v => v.id !== id);
+                set({ clinicalRecords: { ...s.clinicalRecords, [patientId]: { ...rec, vitals } } });
+            },
+
         }),
         {
             name: "hc/app-store",
