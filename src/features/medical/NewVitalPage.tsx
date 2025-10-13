@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import type { Vital } from "@/store/appStore";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 
-
+// YA NO HACE FALTA; SE PUEDE ELIMINAR
 export default function NewVitalPage() {
     const navigate = useNavigate();
     const [sp] = useSearchParams();

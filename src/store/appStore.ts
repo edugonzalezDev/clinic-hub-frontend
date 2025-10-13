@@ -261,6 +261,18 @@ interface AppState {
         data: Omit<Vital, "id">
     ) => string;
 
+    // MEDICATIONS
+    updateMedication: (patientId: string, id: string, patch: Partial<Medication>) => void;
+    deleteMedication: (patientId: string, id: string) => void;
+
+    // LABS
+    updateLab: (patientId: string, id: string, patch: Partial<LabResult>) => void;
+    deleteLab: (patientId: string, id: string) => void;
+
+    // VITALS
+    updateVital: (patientId: string, id: string, patch: Partial<Vital>) => void;
+    deleteVital: (patientId: string, id: string) => void;
+
 }
 
 const seedClinics: Clinic[] = [
@@ -826,6 +838,54 @@ const useAppStore = create<AppState>()(
                     }
                 });
                 return id;
+            },
+
+            // MEDICATIONS
+            updateMedication: (patientId, id, patch) => {
+                const s = get();
+                const rec = s.clinicalRecords[patientId];
+                if (!rec) return;
+                const meds = rec.medications.map(m => (m.id === id ? { ...m, ...patch } : m));
+                set({ clinicalRecords: { ...s.clinicalRecords, [patientId]: { ...rec, medications: meds } } });
+            },
+            deleteMedication: (patientId, id) => {
+                const s = get();
+                const rec = s.clinicalRecords[patientId];
+                if (!rec) return;
+                const meds = rec.medications.filter(m => m.id !== id);
+                set({ clinicalRecords: { ...s.clinicalRecords, [patientId]: { ...rec, medications: meds } } });
+            },
+
+            // LABS
+            updateLab: (patientId, id, patch) => {
+                const s = get();
+                const rec = s.clinicalRecords[patientId];
+                if (!rec) return;
+                const labs = rec.labs.map(l => (l.id === id ? { ...l, ...patch } : l));
+                set({ clinicalRecords: { ...s.clinicalRecords, [patientId]: { ...rec, labs } } });
+            },
+            deleteLab: (patientId, id) => {
+                const s = get();
+                const rec = s.clinicalRecords[patientId];
+                if (!rec) return;
+                const labs = rec.labs.filter(l => l.id !== id);
+                set({ clinicalRecords: { ...s.clinicalRecords, [patientId]: { ...rec, labs } } });
+            },
+
+            // VITALS
+            updateVital: (patientId, id, patch) => {
+                const s = get();
+                const rec = s.clinicalRecords[patientId];
+                if (!rec) return;
+                const vitals = rec.vitals.map(v => (v.id === id ? { ...v, ...patch } : v));
+                set({ clinicalRecords: { ...s.clinicalRecords, [patientId]: { ...rec, vitals } } });
+            },
+            deleteVital: (patientId, id) => {
+                const s = get();
+                const rec = s.clinicalRecords[patientId];
+                if (!rec) return;
+                const vitals = rec.vitals.filter(v => v.id !== id);
+                set({ clinicalRecords: { ...s.clinicalRecords, [patientId]: { ...rec, vitals } } });
             },
 
         }),

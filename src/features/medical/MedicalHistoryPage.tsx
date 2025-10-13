@@ -100,23 +100,19 @@ export default function MedicalHistoryPage() {
                         />
                     </TabsContent>
 
-                    {/* <TabsContent value="medications">
-                        <MedicationsList items={record?.medications ?? []} />
-                    </TabsContent> */}
                     <TabsContent value="medications">
-                        <div className="flex justify-end mb-3">
-                            <Button variant="outline" size="sm"
-                                onClick={() => navigate(`/doctor/medications/new?patientId=${patient.id}`)}>
-                                <Plus className="w-4 h-4 mr-1" /> Nuevo medicamento
-                            </Button>
-                        </div>
-                        <MedicationsList items={record?.medications ?? []} />
+                        <MedicationsList items={record?.medications ?? []} patientId={patient.id} />
+                    </TabsContent>
+
+                    <TabsContent value="labs">
+                        <LabsList items={record?.labs ?? []} patientId={patient.id} />
+                    </TabsContent>
+
+                    <TabsContent value="vitals">
+                        <VitalsList items={record?.vitals ?? []} patientId={patient.id} />
                     </TabsContent>
 
                     {/* <TabsContent value="labs">
-                        <LabsList items={record?.labs ?? []} />
-                    </TabsContent> */}
-                    <TabsContent value="labs">
                         <div className="flex justify-end mb-3">
                             <Button variant="outline" size="sm"
                                 onClick={() => navigate(`/doctor/labs/new?patientId=${patient.id}`)}>
@@ -124,11 +120,8 @@ export default function MedicalHistoryPage() {
                             </Button>
                         </div>
                         <LabsList items={record?.labs ?? []} />
-                    </TabsContent>
-
-                    {/* <TabsContent value="vitals">
-                        <VitalsList items={record?.vitals ?? []} />
                     </TabsContent> */}
+
                     <TabsContent value="vitals">
                         <div className="flex justify-end mb-3">
                             <Button variant="outline" size="sm"
@@ -136,7 +129,7 @@ export default function MedicalHistoryPage() {
                                 <Plus className="w-4 h-4 mr-1" /> Nuevo registro
                             </Button>
                         </div>
-                        <VitalsList items={record?.vitals ?? []} />
+                        {/* <VitalsList items={record?.vitals ?? []} /> */}
                     </TabsContent>
 
                     <TabsContent value="reset">

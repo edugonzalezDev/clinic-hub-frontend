@@ -17,7 +17,6 @@ import NewPrescriptionPage from "./features/medical/NewPrescriptionPage";
 import NewCertificatePage from "./features/medical/NewCertificatePage";
 import PacienteDashboard from "./features/patient/pages/PatientDashboard";
 import MedicalHistory from "./features/patient/pages/MedicalHistory.tsx";
-import NewMedicationPage from "./features/medical/NewMedicationPage.tsx";
 import NewLabResultPage from "./features/medical/NewLabResultPage.tsx";
 import NewVitalPage from "./features/medical/NewVitalPage.tsx";
 
@@ -131,7 +130,6 @@ export default function AppRoutes() {
         }
       />
 
-      <Route path="/doctor/medications/new" element={<NewMedicationPage />} />
       <Route path="/doctor/labs/new" element={<NewLabResultPage />} />
       <Route path="/doctor/vitals/new" element={<NewVitalPage />} />
       {/* admin */}
