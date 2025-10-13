@@ -54,6 +54,39 @@ export type PatientSnapshot = {
     docId?: string;
     insurance?: Patient["insurance"];
 };
+
+
+// 👇 Tipos de Historia Clínica
+export type Consultation = {
+    id: string;
+    dateISO: string;
+    doctorId: string;
+    specialty: string;
+    diagnosis: string;
+    notes: string;
+};
+export type Medication = {
+    id: string;
+    name: string;
+    dosage: string;
+    frequency: string;
+    status: "active" | "suspended" | "completed";
+};
+export type LabResult = {
+    id: string;
+    test: string;
+    dateISO: string;
+    result: string;
+    status: "pending" | "complete";
+};
+export type Vital = {
+    id: string;
+    metric: string;
+    value: string;
+    dateISO: string;
+    status?: "Normal" | "Alto" | "Bajo";
+};
+
 // ++++ certificados-recetas PDF +++
 // Documentos
 export type Certificate = {
@@ -91,37 +124,6 @@ export type Prescription = {
 };
 
 // ++++ FIN - certificados-recetas PDF +++
-
-// 👇 Tipos de Historia Clínica
-export type Consultation = {
-    id: string;
-    dateISO: string;
-    doctorId: string;
-    specialty: string;
-    diagnosis: string;
-    notes: string;
-};
-export type Medication = {
-    id: string;
-    name: string;
-    dosage: string;
-    frequency: string;
-    status: "active" | "suspended" | "completed";
-};
-export type LabResult = {
-    id: string;
-    test: string;
-    dateISO: string;
-    result: string;
-    status: "pending" | "complete";
-};
-export type Vital = {
-    id: string;
-    metric: string;
-    value: string;
-    dateISO: string;
-    status?: "Normal" | "Alto" | "Bajo";
-};
 
 export type ClinicalRecord = {
     consultations: Consultation[];
@@ -425,6 +427,54 @@ const seedClinical: Record<string, ClinicalRecord> = {
             { id: "v1", metric: "TA", value: "120/80 mmHg", dateISO: "2024-01-15", status: "Normal" },
             { id: "v2", metric: "FC", value: "72 lpm", dateISO: "2024-01-15", status: "Normal" },
             { id: "v3", metric: "Peso", value: "75 kg", dateISO: "2024-01-15", status: "Normal" },
+        ],
+        certificates: [
+            {
+                id: "cert-1",
+                patientId: "p1",
+                doctorId: "d1",
+                dateISO: "2025-10-13T01:53:10.060Z",
+                reason: "ha sido atendido/a en consulta médica",
+                recommendations: "mensaje de pruebas",
+                period: {
+                    "fromISO": "2025-10-12",
+                    "toISO": "2025-10-12"
+                },
+                fileUrl: "blob:http://localhost:5173/bdc6dda5-1b46-4cea-af7c-9ecfddd69407",
+                doctorSnapshot: {
+                    name: "Dra. Sofía Pérez"
+                },
+                patientSnapshot: {
+                    name: "Juan Ramírez",
+                    docId: "34.567.890"
+                }
+            }
+        ],
+        prescriptions: [
+            {
+                id: "prx-1",
+                patientId: "p1",
+                doctorId: "d1",
+                dateISO: "2025-10-13T01:59:23.871Z",
+                diagnosis: "Fiebre Alta",
+                items: [
+                    {
+                        "drug": "Ibuprofeno",
+                        "dose": "300 mg",
+                        "frequency": "cada 8 hs",
+                        "duration": "3 Dias",
+                        "notes": "medicamento para bajar la fiebre alta, nota de pruebas ..."
+                    }
+                ],
+                fileUrl: "blob:http://localhost:5173/e252a072-f7f8-4145-ab49-9d2a9ba26bc6",
+                doctorSnapshot: {
+                    name: "Dra. Sofía Pérez"
+                },
+                patientSnapshot: {
+                    name: "Juan Ramírez",
+                    docId: "34.567.890"
+                }
+            }
         ],
     },
     p2: {
