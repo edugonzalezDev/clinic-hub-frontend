@@ -25,7 +25,7 @@ export interface Doctor {
     license?: string;          // matrícula/colegiatura
     signaturePng?: string; //url png sin fondo (firma)
     stampPng?: string;  //png sin fondo (sello)
-    clinicIds?: string[]; // 👈 nuevo
+    clinicIds?: string[];
 
 }
 export interface Patient {
@@ -39,7 +39,7 @@ export interface Patient {
         plan?: string;
         memberId?: string;       // nro. afiliado / póliza
     };
-    clinicIds?: string[]; // 👈 nuevo
+    clinicIds?: string[];
 }
 
 export type DoctorSnapshot = {
@@ -143,7 +143,7 @@ export interface Appointment {
     endsAt: string;
     type: "presencial" | "virtual";
     status: "pending" | "confirmed" | "cancelled";
-    clinicId?: string; // 👈 nuevo
+    clinicId?: string;
 }
 
 /** Usuario “auth” (solo mock) */
@@ -168,13 +168,13 @@ interface AppState {
     currentUser?: User;
     currentPatientId?: string;
     currentDoctorId?: string;
-    currentClinicId?: string; // 👈 nuevo
+    currentClinicId?: string;
     accessToken?: string;
     refreshToken?: string;
 
     // “BD” mock
     users: AuthUser[];
-    clinics: Clinic[];         // 👈 nuevo
+    clinics: Clinic[];
     doctors: Doctor[];
     patients: Patient[];
     appointments: Appointment[];
@@ -200,11 +200,13 @@ interface AppState {
 
     /** Setter de sesión “crudo” (útil si después conectás API real) */
     login: (p: { user: User; accessToken?: string; refreshToken?: string; linkedPatientId?: string; linkedDoctorId?: string }) => void;
-
     logout: () => void;
 
     // negocio
     addAppointment: (a: Appointment) => void;
+    updateAppointment: (id: string, patch: Partial<Appointment>) => void;
+    deleteAppointment: (id: string) => void;
+
     moveWaitlist: (from: number, to: number) => void;
 
     // historia clínica por paciente
@@ -213,10 +215,7 @@ interface AppState {
     // acciones HC (mínimas por ahora)
     upsertClinicalRecord: (patientId: string, patch: Partial<ClinicalRecord>) => void;
 
-    updateAppointment: (id: string, patch: Partial<Appointment>) => void;
-    deleteAppointment: (id: string) => void;
-
-    // gestion paciente
+    // GESTION PACIENTE
     addPatient: (p: Omit<Patient, "id"> & { id?: string }) => string; // devuelve id
     updatePatient: (id: string, patch: Partial<Patient>) => void;
     deletePatient?: (id: string) => void;
@@ -229,17 +228,24 @@ interface AppState {
 
     // para certificados-recetas
     updateDoctorProfile: (patch: Partial<Doctor>) => void;
+
+    // Certificados Medicos
     addCertificate: (
         patientId: string,
         data: Omit<Certificate, "id" | "doctorId" | "dateISO" | "patientId">
             & { dateISO?: string; fileUrl?: string }
     ) => string;
+    updateCertificate: (patientId: string, certId: string, patch: Partial<Certificate>) => void;
+    deleteCertificate: (patientId: string, certId: string) => void;
 
+    // Recetas Medicas
     addPrescription: (
         patientId: string,
         data: Omit<Prescription, "id" | "doctorId" | "dateISO" | "patientId">
             & { dateISO?: string; fileUrl?: string }
     ) => string;
+    updatePrescription: (patientId: string, rxId: string, patch: Partial<Prescription>) => void;
+    deletePrescription: (patientId: string, rxId: string) => void;
 
     // acciones clínicas
     setCurrentClinic: (clinicId: string) => void;
@@ -248,30 +254,28 @@ interface AppState {
     unassignDoctorFromClinic: (doctorId: string, clinicId: string) => void;
     unassignPatientFromClinic: (patientId: string, clinicId: string) => void;
 
+
+    // MEDICATIONS
     addMedicationEntry: (
         patientId: string,
         data: Omit<Medication, "id">
     ) => string;
-
-    addLabResult: (
-        patientId: string,
-        data: Omit<LabResult, "id">
-    ) => string;
-
-    addVitalSign: (
-        patientId: string,
-        data: Omit<Vital, "id">
-    ) => string;
-
-    // MEDICATIONS
     updateMedication: (patientId: string, id: string, patch: Partial<Medication>) => void;
     deleteMedication: (patientId: string, id: string) => void;
 
     // LABS
+    addLabResult: (
+        patientId: string,
+        data: Omit<LabResult, "id">
+    ) => string;
     updateLab: (patientId: string, id: string, patch: Partial<LabResult>) => void;
     deleteLab: (patientId: string, id: string) => void;
 
     // VITALS
+    addVitalSign: (
+        patientId: string,
+        data: Omit<Vital, "id">
+    ) => string;
     updateVital: (patientId: string, id: string, patch: Partial<Vital>) => void;
     deleteVital: (patientId: string, id: string) => void;
 
@@ -659,11 +663,22 @@ const useAppStore = create<AppState>()(
             },
 
             // ---- Negocio ----
-            // addAppointment: (a) => set({ appointments: [...get().appointments, a] }),
             // Al crear turnos, guardar clinicId activa (sin romper compat)
             addAppointment: (a) =>
                 set(s => ({
                     appointments: [...s.appointments, { ...a, clinicId: a.clinicId ?? s.currentClinicId }]
+                })),
+
+            updateAppointment: (id, patch) =>
+                set((s) => ({
+                    appointments: s.appointments.map((a) =>
+                        a.id === id ? { ...a, ...patch } : a
+                    ),
+                })),
+
+            deleteAppointment: (id) =>
+                set((s) => ({
+                    appointments: s.appointments.filter((a) => a.id !== id),
                 })),
 
             moveWaitlist: (from, to) => set((s) => {
@@ -687,17 +702,7 @@ const useAppStore = create<AppState>()(
                     },
                 });
             },
-            updateAppointment: (id, patch) =>
-                set((s) => ({
-                    appointments: s.appointments.map((a) =>
-                        a.id === id ? { ...a, ...patch } : a
-                    ),
-                })),
 
-            deleteAppointment: (id) =>
-                set((s) => ({
-                    appointments: s.appointments.filter((a) => a.id !== id),
-                })),
 
 
             // gestio paciente
@@ -788,6 +793,36 @@ const useAppStore = create<AppState>()(
                 return id;
             },
 
+            updateCertificate: (patientId, certId, patch) =>
+                set((s) => {
+                    const rec = s.clinicalRecords[patientId];
+                    if (!rec?.certificates) return {};
+                    return {
+                        clinicalRecords: {
+                            ...s.clinicalRecords,
+                            [patientId]: {
+                                ...rec,
+                                certificates: rec.certificates.map(c => c.id === certId ? { ...c, ...patch } : c),
+                            },
+                        },
+                    };
+                }),
+
+            deleteCertificate: (patientId, certId) =>
+                set((s) => {
+                    const rec = s.clinicalRecords[patientId];
+                    if (!rec?.certificates) return {};
+                    return {
+                        clinicalRecords: {
+                            ...s.clinicalRecords,
+                            [patientId]: {
+                                ...rec,
+                                certificates: rec.certificates.filter(c => c.id !== certId),
+                            },
+                        },
+                    };
+                }),
+
             addPrescription: (patientId, data) => {
                 const s = get();
                 const id = `rx-${crypto.randomUUID()}`;
@@ -813,6 +848,37 @@ const useAppStore = create<AppState>()(
                 });
                 return id;
             },
+
+            updatePrescription: (patientId, rxId, patch) =>
+                set((s) => {
+                    const rec = s.clinicalRecords[patientId];
+                    if (!rec?.prescriptions) return {};
+                    return {
+                        clinicalRecords: {
+                            ...s.clinicalRecords,
+                            [patientId]: {
+                                ...rec,
+                                prescriptions: rec.prescriptions.map(r => r.id === rxId ? { ...r, ...patch } : r),
+                            },
+                        },
+                    };
+                }),
+
+            deletePrescription: (patientId, rxId) =>
+                set((s) => {
+                    const rec = s.clinicalRecords[patientId];
+                    if (!rec?.prescriptions) return {};
+                    return {
+                        clinicalRecords: {
+                            ...s.clinicalRecords,
+                            [patientId]: {
+                                ...rec,
+                                prescriptions: rec.prescriptions.filter(r => r.id !== rxId),
+                            },
+                        },
+                    };
+                }),
+
             setCurrentClinic: (clinicId) => set({ currentClinicId: clinicId }),
 
             assignDoctorToClinic: (doctorId, clinicId) =>
@@ -847,6 +913,7 @@ const useAppStore = create<AppState>()(
                     )
                 })),
 
+            // MEDICATIONS
             // para la seccion historia clinica
             addMedicationEntry: (patientId, data) => {
                 const id = `m-${crypto.randomUUID()}`;
@@ -861,36 +928,6 @@ const useAppStore = create<AppState>()(
                 });
                 return id;
             },
-
-            addLabResult: (patientId, data) => {
-                const id = `l-${crypto.randomUUID()}`;
-                const s = get();
-                const cur = s.clinicalRecords[patientId] ?? { consultations: [], medications: [], labs: [], vitals: [] };
-                const next: LabResult = { id, ...data };
-                set({
-                    clinicalRecords: {
-                        ...s.clinicalRecords,
-                        [patientId]: { ...cur, labs: [...(cur.labs ?? []), next] }
-                    }
-                });
-                return id;
-            },
-
-            addVitalSign: (patientId, data) => {
-                const id = `v-${crypto.randomUUID()}`;
-                const s = get();
-                const cur = s.clinicalRecords[patientId] ?? { consultations: [], medications: [], labs: [], vitals: [] };
-                const next: Vital = { id, ...data };
-                set({
-                    clinicalRecords: {
-                        ...s.clinicalRecords,
-                        [patientId]: { ...cur, vitals: [...(cur.vitals ?? []), next] }
-                    }
-                });
-                return id;
-            },
-
-            // MEDICATIONS
             updateMedication: (patientId, id, patch) => {
                 const s = get();
                 const rec = s.clinicalRecords[patientId];
@@ -907,6 +944,20 @@ const useAppStore = create<AppState>()(
             },
 
             // LABS
+            addLabResult: (patientId, data) => {
+                const id = `l-${crypto.randomUUID()}`;
+                const s = get();
+                const cur = s.clinicalRecords[patientId] ?? { consultations: [], medications: [], labs: [], vitals: [] };
+                const next: LabResult = { id, ...data };
+                set({
+                    clinicalRecords: {
+                        ...s.clinicalRecords,
+                        [patientId]: { ...cur, labs: [...(cur.labs ?? []), next] }
+                    }
+                });
+                return id;
+            },
+
             updateLab: (patientId, id, patch) => {
                 const s = get();
                 const rec = s.clinicalRecords[patientId];
@@ -923,6 +974,19 @@ const useAppStore = create<AppState>()(
             },
 
             // VITALS
+            addVitalSign: (patientId, data) => {
+                const id = `v-${crypto.randomUUID()}`;
+                const s = get();
+                const cur = s.clinicalRecords[patientId] ?? { consultations: [], medications: [], labs: [], vitals: [] };
+                const next: Vital = { id, ...data };
+                set({
+                    clinicalRecords: {
+                        ...s.clinicalRecords,
+                        [patientId]: { ...cur, vitals: [...(cur.vitals ?? []), next] }
+                    }
+                });
+                return id;
+            },
             updateVital: (patientId, id, patch) => {
                 const s = get();
                 const rec = s.clinicalRecords[patientId];
@@ -948,11 +1012,11 @@ const useAppStore = create<AppState>()(
                 currentUser: s.currentUser,
                 currentPatientId: s.currentPatientId,
                 currentDoctorId: s.currentDoctorId,
-                currentClinicId: s.currentClinicId,     // 👈
+                currentClinicId: s.currentClinicId,
                 accessToken: s.accessToken,
                 refreshToken: s.refreshToken,
                 users: s.users,
-                clinics: s.clinics,                      // 👈
+                clinics: s.clinics,
                 doctors: s.doctors,
                 patients: s.patients,
                 appointments: s.appointments,
