@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Calendar, Clock, FileText, Menu, Users } from "lucide-react";
+import { Calendar, Clock, FileText, LogOut, Menu, Users } from "lucide-react";
 import { parseISO, startOfToday, endOfToday, isWithinInterval, compareAsc } from "date-fns";
 import useAppStore from "@/store/appStore";
 
@@ -36,6 +36,7 @@ export default function DoctorSideSheet() {
         clinics,
         currentClinicId,
         setCurrentClinic,
+        logout
     } = useAppStore();
 
     // doctor actual
@@ -119,7 +120,7 @@ export default function DoctorSideSheet() {
                     <Separator />
 
                     {/* Stats mini */}
-                    <section className="p-5 grid grid-cols-3 gap-3">
+                    {/* <section className="p-5 grid grid-cols-3 gap-3">
                         <div className="rounded-xl border p-3 bg-card">
                             <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                 <Calendar className="h-3.5 w-3.5" />
@@ -143,12 +144,12 @@ export default function DoctorSideSheet() {
                                 {todayAppts.filter((a) => a.status === "pending").length}
                             </div>
                         </div>
-                    </section>
+                    </section> */}
 
-                    <Separator />
+                    {/* <Separator /> */}
 
                     {/* Agenda de hoy (mini) */}
-                    <section className="p-5">
+                    {/* <section className="p-5">
                         <div className="mb-2 flex items-center gap-2">
                             <Clock className="h-4 w-4 text-primary" />
                             <h3 className="font-medium">Agenda de hoy</h3>
@@ -188,7 +189,7 @@ export default function DoctorSideSheet() {
                                 Ver todo
                             </Button>
                         )}
-                    </section>
+                    </section> */}
 
                     <Separator />
 
@@ -222,6 +223,17 @@ export default function DoctorSideSheet() {
                             </Button>
                         </div>
                     </section>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                            logout();
+                            navigate("/", { replace: true });
+                        }}
+                    >
+                        <LogOut className="w-4 h-4 mr-2 " />
+                        Cerrar sesión
+                    </Button>
                 </ScrollArea>
             </SheetContent>
         </Sheet>

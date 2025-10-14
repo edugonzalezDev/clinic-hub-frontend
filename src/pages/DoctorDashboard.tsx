@@ -9,6 +9,8 @@ import { parseISO, startOfToday, endOfToday, isWithinInterval, format, compareAs
 import useAppStore from "@/store/appStore";
 import { useCallback, useMemo } from "react";
 import MiniMap from "@/components/clinic/MiniMap";
+import DoctorSideSheet from "@/features/doctor/components/DoctorSideSheet";
+
 
 function hhmm(d: Date) {
     return new Intl.DateTimeFormat(undefined, { hour: "2-digit", minute: "2-digit" }).format(d);
@@ -92,13 +94,20 @@ const DoctorDashboard = () => {
     };
 
 
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
             {/* Header */}
             <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
                 <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+                    {/* ⬇️ Botón que abre el sheet */}
+                    <DoctorSideSheet />
+
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-primary rounded-xl flex items-center justify-center my-gradient-class">
+                        <div
+                            className="w-10 h-10 bg-gradient-primary rounded-xl flex items-center justify-center my-gradient-class"
+                            onClick={() => { navigate("/doctor"); }}
+                        >
                             <Activity className="w-5 h-5 text-white" />
                         </div>
                         <div>
@@ -106,8 +115,9 @@ const DoctorDashboard = () => {
                             <p className="text-sm text-muted-foreground">Portal de profesionales</p>
                         </div>
                     </div>
+
                     {/* seccion clinic name */}
-                    <div className="lg:flex items-center gap-2 hidden lg:solid ">
+                    {/* <div className="lg:flex items-center gap-2 hidden lg:solid ">
                         <span className="text-sm text-muted-foreground font-semibold">Clínica:</span>
                         <select
                             className="h-8 rounded-md px-2 text-sm border-2 border-slate-400"
@@ -116,7 +126,9 @@ const DoctorDashboard = () => {
                         >
                             {clinics.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                         </select>
-                    </div>
+                    </div> */}
+
+
                     <Button
                         variant="ghost"
                         size="sm"
