@@ -88,7 +88,6 @@ export default function MedicalHistoryPage() {
                         <TabsTrigger value="medications">Medicación</TabsTrigger>
                         <TabsTrigger value="labs">Laboratorio</TabsTrigger>
                         <TabsTrigger value="vitals">Signos vitales</TabsTrigger>
-
                         <TabsTrigger value="reset">Recetas</TabsTrigger>
                         <TabsTrigger value="certificate">Certificados</TabsTrigger>
                     </TabsList>
