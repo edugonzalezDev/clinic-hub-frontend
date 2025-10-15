@@ -11,6 +11,10 @@ import { useCallback, useMemo } from "react";
 import MiniMap from "@/components/clinic/MiniMap";
 import DoctorSideSheet from "@/features/doctor/components/DoctorSideSheet";
 import LogoTitle from "@/features/doctor/components/LogoTitle";
+import ConsultationsByMonthLine from "@/components/charts/ConsultationsByMonthLine";
+import AppointmentsTypeDonut from "@/components/charts/AppointmentsTypeDonut";
+import PatientsByAgeBar from "@/components/charts/PatientsByAgeBar";
+import PatientsBySexDonut from "@/components/charts/PatientsBySexDonut";
 
 
 function hhmm(d: Date) {
@@ -135,6 +139,29 @@ const DoctorDashboard = () => {
                 </div>
 
                 {/* Stats */}
+                <div className="space-y-1">
+                    <h2 className="text-3xl font-semibold">
+                        Visualizá tus métricas de actividad clínica.
+                    </h2>
+
+                    {/* Gráficos */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div className="lg:col-span-2">
+                            <ConsultationsByMonthLine />
+                        </div>
+                        <div className="lg:col-span-1">
+                            <AppointmentsTypeDonut />
+                        </div>
+                    </div>
+                    {/* <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div className="lg:col-span-2">
+                            <PatientsByAgeBar />
+                        </div>
+                        <div className="lg:col-span-1">
+                            <PatientsBySexDonut />
+                        </div>
+                    </div> */}
+                </div>
                 {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {stats.map((stat, i) => (
                         <Card key={i} className="shadow-md">
@@ -152,6 +179,8 @@ const DoctorDashboard = () => {
                         </Card>
                     ))}
                 </div> */}
+
+                {/* Graficos */}
 
                 {/* Agenda de hoy */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
