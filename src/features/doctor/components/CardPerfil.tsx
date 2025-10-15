@@ -2,7 +2,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import useAppStore from "@/store/appStore";
 import { useMemo } from "react";
-import { useNavigate } from "react-router";
+// import { useNavigate } from "react-router";
 
 
 
@@ -14,7 +14,7 @@ const CardPerfil = () => {
         return (a?.[0] ?? "") + (b?.[0] ?? "");
     }
 
-    const navigate = useNavigate();
+    // const navigate = useNavigate();
     const {
         currentUser,
         currentDoctorId,
@@ -34,7 +34,7 @@ const CardPerfil = () => {
             <div className="flex items-center justify-start gap-4 mt-2 pl-3 pt-4">
                 <Avatar className="h-14 w-14">
                     {/* si más adelante guardás foto => src aquí */}
-                    <AvatarImage alt={currentUser?.name} />
+                    <AvatarImage alt={currentUser?.name} src={doctor?.photoUrl} />
                     <AvatarFallback className="font-semibold">{initials(currentUser?.name)}</AvatarFallback>
                 </Avatar>
                 <div className="min-w-0">

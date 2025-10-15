@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { genPrescriptionPdf } from "@/lib/pdf";
 import { toast } from "sonner";
-import { Activity, ArrowLeft } from "lucide-react";
 import DoctorSideSheet from "../doctor/components/DoctorSideSheet";
 import LogoTitle from "../doctor/components/LogoTitle";
 
