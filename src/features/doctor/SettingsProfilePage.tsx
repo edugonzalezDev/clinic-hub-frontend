@@ -67,7 +67,7 @@ export default function SettingsProfilePage() {
             email: userRecord?.email ?? "",
             phone: userRecord?.phone ?? "",
             license: doctor?.license ?? "",
-            photoUrl: (doctor as any)?.photoUrl, // si luego lo agregás al tipo
+            photoUrl: doctor?.photoUrl ?? "",
             signaturePng: doctor?.signaturePng,
             stampPng: doctor?.stampPng,
             bio: "",
@@ -81,7 +81,7 @@ export default function SettingsProfilePage() {
             email: userRecord?.email ?? "",
             phone: userRecord?.phone ?? "",
             license: doctor?.license ?? "",
-            photoUrl: (doctor as any)?.photoUrl,
+            photoUrl: doctor?.photoUrl ?? "",
             signaturePng: doctor?.signaturePng,
             stampPng: doctor?.stampPng,
             bio: "",
@@ -97,8 +97,8 @@ export default function SettingsProfilePage() {
             license: data.license,
             signaturePng: data.signaturePng,
             stampPng: data.stampPng,
-            // si agregás photoUrl al tipo Doctor en tu store:
-            ...(data.photoUrl ? { photoUrl: data.photoUrl } : {}),
+            photoUrl: data.photoUrl ?? "",   // ⬅️ guarda también el vacío para “Quitar”
+            // ...(data.photoUrl ? { photoUrl: data.photoUrl } : {}),
         });
 
         // 2) (opcional) persistir email/phone en el usuario autenticado

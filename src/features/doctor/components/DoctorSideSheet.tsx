@@ -128,7 +128,7 @@ export default function DoctorSideSheet() {
                                 <div className="my-gradient-class w-5 h-5 rounded-[3px] flex justify-center items-center">
                                     <Calendar className="h-3 w-3 text-white" />
                                 </div>
-                                Hoy
+                                Turnos
                             </div>
                             <div className="text-2xl font-semibold mt-1">{todayAppts.length}</div>
                         </div>

@@ -29,13 +29,24 @@ const CardPerfil = () => {
     const roleLabel = currentUser?.role === "doctor" ? "Profesional" :
         currentUser?.role === "admin" ? "Administrador" : "Usuario";
 
+    // CardPerfil.tsx
+    // const doctorFind = useAppStore(s =>
+    //     s.doctors.find(d => d.id === s.currentDoctorId)
+    // );
+    // const currentUserFind = useAppStore(s => s.currentUser);
+
     return (
         <>
             <div className="flex items-center justify-start gap-4 mt-2 pl-3 pt-4">
-                <Avatar className="h-14 w-14">
+                <Avatar className="h-16 w-16" key={doctor?.photoUrl || "no-photo"}>
                     {/* si más adelante guardás foto => src aquí */}
-                    <AvatarImage alt={currentUser?.name} src={doctor?.photoUrl} />
-                    <AvatarFallback className="font-semibold">{initials(currentUser?.name)}</AvatarFallback>
+                    <AvatarImage
+                        className="object-cover border-2 border-slate-600 rounded-full"
+                        alt={currentUser?.name}
+                        src={doctor?.photoUrl || undefined} />
+                    <AvatarFallback className="font-semibold">
+                        {initials(currentUser?.name)}
+                    </AvatarFallback>
                 </Avatar>
                 <div className="min-w-0">
                     <div className="flex items-center gap-2">

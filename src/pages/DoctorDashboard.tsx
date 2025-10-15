@@ -72,18 +72,18 @@ const DoctorDashboard = () => {
     );
 
     // contadores
-    const stats = [
-        { label: "Turnos de hoy", value: String(todayAppts.length), icon: Calendar, color: "text-primary" },
-        { label: "Notas pendientes", value: "0", icon: FileText, color: "text-yellow-600" },
-        {
-            label: "Pacientes totales", value: String(
-                // patients.filter(p => p.clinicIds?.includes(currentClinicId!)).length
-                currentClinicId
-                    ? patients.filter(p => (p.clinicIds ?? []).includes(currentClinicId)).length
-                    : patients.length
-            ), icon: Users, color: "text-secondary"
-        },
-    ];
+    // const stats = [
+    //     { label: "Turnos de hoy", value: String(todayAppts.length), icon: Calendar, color: "text-primary" },
+    //     { label: "Notas pendientes", value: "0", icon: FileText, color: "text-yellow-600" },
+    //     {
+    //         label: "Pacientes totales", value: String(
+    //             // patients.filter(p => p.clinicIds?.includes(currentClinicId!)).length
+    //             currentClinicId
+    //                 ? patients.filter(p => (p.clinicIds ?? []).includes(currentClinicId)).length
+    //                 : patients.length
+    //         ), icon: Users, color: "text-secondary"
+    //     },
+    // ];
 
     const statusBadge = (status: string) => {
         switch (status) {
@@ -111,6 +111,7 @@ const DoctorDashboard = () => {
                     <Button
                         variant="ghost"
                         size="sm"
+                        className="hidden lg:flex lg:flex-nowrap lg:justify-center lg:gap-1"
                         onClick={() => {
                             logout();
                             navigate("/", { replace: true });
@@ -134,7 +135,7 @@ const DoctorDashboard = () => {
                 </div>
 
                 {/* Stats */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {stats.map((stat, i) => (
                         <Card key={i} className="shadow-md">
                             <CardContent className="pt-6">
@@ -150,7 +151,7 @@ const DoctorDashboard = () => {
                             </CardContent>
                         </Card>
                     ))}
-                </div>
+                </div> */}
 
                 {/* Agenda de hoy */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
