@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, Video, FileText, Users, LogOut, Activity, Clock, Award, Stamp, Pill } from "lucide-react";
+import { Calendar, Video, FileText, Users, LogOut, Clock, Award, Stamp, Pill } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { useDndOrder } from "@/hooks/useDndOrder"; // <— nuevo
@@ -10,6 +10,7 @@ import useAppStore from "@/store/appStore";
 import { useCallback, useMemo } from "react";
 import MiniMap from "@/components/clinic/MiniMap";
 import DoctorSideSheet from "@/features/doctor/components/DoctorSideSheet";
+import LogoTitle from "@/features/doctor/components/LogoTitle";
 
 
 function hhmm(d: Date) {
@@ -18,7 +19,7 @@ function hhmm(d: Date) {
 
 const DoctorDashboard = () => {
     const navigate = useNavigate();
-    const { currentUser, currentDoctorId, doctors, patients, appointments, clinics, currentClinicId, setCurrentClinic, logout } = useAppStore();
+    const { currentUser, currentDoctorId, doctors, patients, appointments, clinics, currentClinicId, logout } = useAppStore();
 
     const clinic = useMemo(() => clinics.find(c => c.id === currentClinicId) ?? clinics[0], [clinics, currentClinicId]);
 
@@ -102,32 +103,10 @@ const DoctorDashboard = () => {
                 <div className="container mx-auto px-4 py-4 flex items-center justify-between">
                     {/* ⬇️ Botón que abre el sheet */}
                     <DoctorSideSheet />
-
-                    <div className="flex items-center gap-3">
-                        <div
-                            className="w-10 h-10 bg-gradient-primary rounded-xl flex items-center justify-center my-gradient-class"
-                            onClick={() => { navigate("/doctor"); }}
-                        >
-                            <Activity className="w-5 h-5 text-white" />
-                        </div>
-                        <div>
-                            <h1 className="text-xl font-semibold">HealthConnect</h1>
-                            <p className="text-sm text-muted-foreground">Portal de profesionales</p>
-                        </div>
-                    </div>
-
-                    {/* seccion clinic name */}
-                    {/* <div className="lg:flex items-center gap-2 hidden lg:solid ">
-                        <span className="text-sm text-muted-foreground font-semibold">Clínica:</span>
-                        <select
-                            className="h-8 rounded-md px-2 text-sm border-2 border-slate-400"
-                            value={clinic?.id ?? ""}
-                            onChange={(e) => setCurrentClinic(e.target.value)}
-                        >
-                            {clinics.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                        </select>
-                    </div> */}
-
+                    <LogoTitle
+                        title="HealthConnect"
+                        description="Portal de profesionales"
+                    />
 
                     <Button
                         variant="ghost"

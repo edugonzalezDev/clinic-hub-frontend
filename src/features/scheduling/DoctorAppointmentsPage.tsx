@@ -1,17 +1,19 @@
 // src/features/scheduling/DoctorAppointmentsPage.tsx
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Activity, ArrowLeft, CalendarPlus, Calendar as CalIcon, CheckCircle, Clock, Edit3, Trash2 } from "lucide-react";
+import { CalendarPlus, Calendar as CalIcon, CheckCircle, Clock, Edit3, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import useAppStore, { type Appointment } from "@/store/appStore";
 import { useDndOrder } from "@/hooks/useDndOrder";
 import { addMinutes, compareAsc, endOfDay, format, parse, parseISO, startOfDay, isWithinInterval } from "date-fns";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import DoctorSideSheet from "@/features/doctor/components/DoctorSideSheet";
+import LogoTitle from "../doctor/components/LogoTitle";
+
 
 function StatusBadge({ status }: { status: "pending" | "confirmed" | "cancelled" }) {
     if (status === "pending") return <Badge variant="secondary">pendiente</Badge>;
@@ -24,7 +26,6 @@ function hhmm(d: Date) {
 }
 
 export default function DoctorAppointmentsPage() {
-    const navigate = useNavigate();
     const {
         currentUser,
         currentDoctorId,
@@ -32,8 +33,6 @@ export default function DoctorAppointmentsPage() {
         patients,
         appointments,
         currentClinicId,
-        clinics,
-        setCurrentClinic,
         addAppointment,
         updateAppointment,
         deleteAppointment,
@@ -60,7 +59,7 @@ export default function DoctorAppointmentsPage() {
     //     return clinicId === undefined || clinicId === currentClinicId;
     // }, [currentClinicId]);
 
-    const clinic = useMemo(() => clinics.find(c => c.id === currentClinicId) ?? clinics[0], [clinics, currentClinicId]);
+    // const clinic = useMemo(() => clinics.find(c => c.id === currentClinicId) ?? clinics[0], [clinics, currentClinicId]);
 
     const belongsToActiveClinic = useCallback((a: { clinicId?: string; patientId: string }) => {
         if (!currentClinicId) return true;              // sin clínica activa, mostrar todo
@@ -103,12 +102,6 @@ export default function DoctorAppointmentsPage() {
     const [newType, setNewType] = useState<Appointment["type"]>("virtual");
     const [newStatus, setNewStatus] = useState<Appointment["status"]>("confirmed");
 
-    // handlers TIPADOS
-    // const onChangeType = (e: React.ChangeEvent<HTMLSelectElement>) =>
-    //     setNewType(e.target.value as Appointment["type"]);
-
-    // const onChangeStatus = (e: React.ChangeEvent<HTMLSelectElement>) =>
-    //     setNewStatus(e.target.value as Appointment["status"]);
 
     const onChangeNewType = (e: React.ChangeEvent<HTMLSelectElement>) =>
         setNewType(e.target.value as Appointment["type"]);
@@ -201,32 +194,13 @@ export default function DoctorAppointmentsPage() {
             {/* Header */}
             <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
                 <div className="container mx-auto px-4 py-4 flex items-center justify-between gap-1">
-                    <div className="flex items-center gap-3 ">
-                        <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="gap-2 hidden lg:block">
-                            <ArrowLeft className="w-4 h-4" />
-                            Volver
-                        </Button>
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 my-gradient-class rounded-xl flex items-center justify-center">
-                                <Activity className="w-5 h-5 text-white" />
-                            </div>
-                            <div>
-                                <h1 className="text-xl font-semibold">Gestión de agenda</h1>
-                                <p className="text-sm text-muted-foreground">Profesional: {doctors.find(d => d.id === doctorId)?.name ?? "—"}</p>
-                            </div>
-                        </div>
-                    </div>
-                    {/* seccion clinic name */}
-                    <div className="lg:flex items-center gap-2 hidden lg:solid ">
-                        <span className="text-sm text-muted-foreground font-semibold">Clínica:</span>
-                        <select
-                            className="h-8 rounded-md px-2 text-sm border-2 border-slate-400"
-                            value={clinic?.id ?? ""}
-                            onChange={(e) => setCurrentClinic(e.target.value)}
-                        >
-                            {clinics.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                        </select>
-                    </div>
+
+                    <DoctorSideSheet />
+                    <LogoTitle
+                        title="Gestión de agenda"
+                        description={`Profesional: ${doctors.find(d => d.id === doctorId)?.name ?? "—"}`}
+                    />
+
                     <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:gap-3">
                         <div className="flex items-center gap-2">
                             <CalIcon className="w-4 h-4 text-primary" />

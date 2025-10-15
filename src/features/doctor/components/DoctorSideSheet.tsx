@@ -3,30 +3,29 @@ import { useNavigate } from "react-router";
 import {
     Sheet,
     SheetContent,
-    SheetDescription,
-    SheetHeader,
-    SheetTitle,
     SheetTrigger,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Calendar, Clock, FileText, LogOut, Menu, Users } from "lucide-react";
+import { Calendar, FileText, LogOut, Menu, Users } from "lucide-react";
 import { parseISO, startOfToday, endOfToday, isWithinInterval, compareAsc } from "date-fns";
 import useAppStore from "@/store/appStore";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 
-function hhmm(d: Date) {
-    return new Intl.DateTimeFormat(undefined, { hour: "2-digit", minute: "2-digit" }).format(d);
-}
-function StatusBadge({ status }: { status: "pending" | "confirmed" | "cancelled" }) {
-    if (status === "pending") return <Badge variant="secondary">pendiente</Badge>;
-    if (status === "confirmed") return <Badge>confirmada</Badge>;
-    return <Badge variant="destructive">cancelada</Badge>;
-}
+
+
 
 export default function DoctorSideSheet() {
     const navigate = useNavigate();
+
+
+    function initials(name?: string) {
+        if (!name) return "U";
+        const [a, b] = name.split(" ");
+        return (a?.[0] ?? "") + (b?.[0] ?? "");
+    }
     const {
         currentUser,
         currentDoctorId,
@@ -36,8 +35,16 @@ export default function DoctorSideSheet() {
         clinics,
         currentClinicId,
         setCurrentClinic,
-        logout
+        logout,
     } = useAppStore();
+
+    const doctor = useMemo(
+        () => doctors.find(d => d.id === currentDoctorId),
+        [doctors, currentDoctorId]
+    );
+
+    const roleLabel = currentUser?.role === "doctor" ? "Profesional" :
+        currentUser?.role === "admin" ? "Administrador" : "Usuario";
 
     // doctor actual
     const doctorId = useMemo(() => {
@@ -92,13 +99,31 @@ export default function DoctorSideSheet() {
             </SheetTrigger>
 
             <SheetContent side="left" className="w-[360px] p-0">
-                <SheetHeader className="px-5 pt-5 pb-3">
-                    <SheetTitle className="text-base">Panel del profesional</SheetTitle>
-                    <SheetDescription className="text-xs">
-                        Accesos rápidos, agenda de hoy y sede activa
-                    </SheetDescription>
-                </SheetHeader>
+                {/* Perfil */}
+                <div className="flex items-center justify-start gap-4 mt-2 pl-3 pt-4">
+                    <Avatar className="h-14 w-14">
+                        {/* si más adelante guardás foto => src aquí */}
+                        <AvatarImage alt={currentUser?.name} />
+                        <AvatarFallback className="font-semibold">{initials(currentUser?.name)}</AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                            <h3 className="font-semibold truncate">{currentUser?.name ?? "—"}</h3>
+                            <Badge variant="secondary" className="text-xs">{roleLabel}</Badge>
+                        </div>
+                        {doctor?.license && (
+                            <p className="text-xs text-muted-foreground mt-0.5">Matrícula: {doctor.license}</p>
+                        )}
+                        {/* Si en AuthUser guardás email/phone, podés mostrarlos aquí también */}
+                        {currentUser?.email && (
+                            <p className="text-xs text-muted-foreground">{currentUser.email}</p>
+                        )}
+                    </div>
+                </div>
+
+
                 <Separator />
+
 
                 <ScrollArea className="h-[calc(100vh-140px)]">
                     {/* Sede activa + selector */}
@@ -120,78 +145,42 @@ export default function DoctorSideSheet() {
                     <Separator />
 
                     {/* Stats mini */}
-                    {/* <section className="p-5 grid grid-cols-3 gap-3">
+                    <section className="p-5 grid grid-cols-3 gap-3">
                         <div className="rounded-xl border p-3 bg-card">
                             <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                <Calendar className="h-3.5 w-3.5" />
+                                <div className="my-gradient-class w-5 h-5 rounded-[3px] flex justify-center items-center">
+                                    <Calendar className="h-3 w-3 text-white" />
+                                </div>
                                 Hoy
                             </div>
                             <div className="text-2xl font-semibold mt-1">{todayAppts.length}</div>
                         </div>
                         <div className="rounded-xl border p-3 bg-card">
                             <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                <Users className="h-3.5 w-3.5" />
-                                Pacientes
+                                <div className="my-gradient-class w-5 h-5 rounded-[3px] flex justify-center items-center">
+                                    <Users className="h-3 w-3 text-white" />
+                                </div>
+
+                                Pacien.
                             </div>
                             <div className="text-2xl font-semibold mt-1">{totalPacientes}</div>
                         </div>
                         <div className="rounded-xl border p-3 bg-card">
                             <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                <FileText className="h-3.5 w-3.5" />
+                                <div className="my-gradient-class w-5 h-5 rounded-[3px] flex justify-center items-center">
+                                    <FileText className="h-3 w-3 text-white" />
+                                </div>
+
                                 Pend.
                             </div>
                             <div className="text-2xl font-semibold mt-1">
                                 {todayAppts.filter((a) => a.status === "pending").length}
                             </div>
                         </div>
-                    </section> */}
-
-                    {/* <Separator /> */}
-
-                    {/* Agenda de hoy (mini) */}
-                    {/* <section className="p-5">
-                        <div className="mb-2 flex items-center gap-2">
-                            <Clock className="h-4 w-4 text-primary" />
-                            <h3 className="font-medium">Agenda de hoy</h3>
-                        </div>
-
-                        {todayAppts.length === 0 ? (
-                            <p className="text-sm text-muted-foreground">No hay turnos para hoy.</p>
-                        ) : (
-                            <ul className="space-y-2">
-                                {todayAppts.slice(0, 6).map((a) => {
-                                    const p = patients.find((x) => x.id === a.patientId);
-                                    const start = parseISO(a.startsAt);
-                                    return (
-                                        <li
-                                            key={a.id}
-                                            className="rounded-lg border p-3 bg-card hover:bg-accent/30 transition-colors"
-                                        >
-                                            <div className="flex items-center justify-between gap-2">
-                                                <div className="font-medium text-sm">{p?.name ?? "Paciente"}</div>
-                                                <StatusBadge status={a.status} />
-                                            </div>
-                                            <div className="text-xs text-muted-foreground mt-1">
-                                                {hhmm(start)} • {a.type === "virtual" ? "Teleconsulta" : "Presencial"}
-                                            </div>
-                                        </li>
-                                    );
-                                })}
-                            </ul>
-                        )}
-
-                        {todayAppts.length > 6 && (
-                            <Button
-                                className="mt-3 w-full"
-                                variant="outline"
-                                onClick={() => navigate("/doctor/appointments")}
-                            >
-                                Ver todo
-                            </Button>
-                        )}
-                    </section> */}
+                    </section>
 
                     <Separator />
+
 
                     {/* Accesos rápidos */}
                     <section className="p-5 space-y-2">
@@ -223,15 +212,17 @@ export default function DoctorSideSheet() {
                             </Button>
                         </div>
                     </section>
+                    <Separator className="my-4" />
+
                     <Button
-                        variant="ghost"
-                        size="sm"
+                        variant="destructive"
+                        className="w-auto ml-5"
                         onClick={() => {
                             logout();
                             navigate("/", { replace: true });
                         }}
                     >
-                        <LogOut className="w-4 h-4 mr-2 " />
+                        <LogOut className="w-4 h-4 mr-2" />
                         Cerrar sesión
                     </Button>
                 </ScrollArea>
