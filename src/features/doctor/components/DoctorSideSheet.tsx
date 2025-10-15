@@ -8,24 +8,22 @@ import {
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Calendar, FileText, LogOut, Menu, Users } from "lucide-react";
+import { Calendar, Edit3, FileText, LogOut, Menu, Stamp, Users } from "lucide-react";
 import { parseISO, startOfToday, endOfToday, isWithinInterval, compareAsc } from "date-fns";
 import useAppStore from "@/store/appStore";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-
-
+// import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+// import { Badge } from "@/components/ui/badge";
+import CardPerfil from "./CardPerfil";
 
 
 export default function DoctorSideSheet() {
     const navigate = useNavigate();
 
-
-    function initials(name?: string) {
-        if (!name) return "U";
-        const [a, b] = name.split(" ");
-        return (a?.[0] ?? "") + (b?.[0] ?? "");
-    }
+    // function initials(name?: string) {
+    //     if (!name) return "U";
+    //     const [a, b] = name.split(" ");
+    //     return (a?.[0] ?? "") + (b?.[0] ?? "");
+    // }
     const {
         currentUser,
         currentDoctorId,
@@ -38,13 +36,13 @@ export default function DoctorSideSheet() {
         logout,
     } = useAppStore();
 
-    const doctor = useMemo(
-        () => doctors.find(d => d.id === currentDoctorId),
-        [doctors, currentDoctorId]
-    );
+    // const doctor = useMemo(
+    //     () => doctors.find(d => d.id === currentDoctorId),
+    //     [doctors, currentDoctorId]
+    // );
 
-    const roleLabel = currentUser?.role === "doctor" ? "Profesional" :
-        currentUser?.role === "admin" ? "Administrador" : "Usuario";
+    // const roleLabel = currentUser?.role === "doctor" ? "Profesional" :
+    //     currentUser?.role === "admin" ? "Administrador" : "Usuario";
 
     // doctor actual
     const doctorId = useMemo(() => {
@@ -100,30 +98,9 @@ export default function DoctorSideSheet() {
 
             <SheetContent side="left" className="w-[360px] p-0">
                 {/* Perfil */}
-                <div className="flex items-center justify-start gap-4 mt-2 pl-3 pt-4">
-                    <Avatar className="h-14 w-14">
-                        {/* si más adelante guardás foto => src aquí */}
-                        <AvatarImage alt={currentUser?.name} />
-                        <AvatarFallback className="font-semibold">{initials(currentUser?.name)}</AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                            <h3 className="font-semibold truncate">{currentUser?.name ?? "—"}</h3>
-                            <Badge variant="secondary" className="text-xs">{roleLabel}</Badge>
-                        </div>
-                        {doctor?.license && (
-                            <p className="text-xs text-muted-foreground mt-0.5">Matrícula: {doctor.license}</p>
-                        )}
-                        {/* Si en AuthUser guardás email/phone, podés mostrarlos aquí también */}
-                        {currentUser?.email && (
-                            <p className="text-xs text-muted-foreground">{currentUser.email}</p>
-                        )}
-                    </div>
-                </div>
-
+                <CardPerfil />
 
                 <Separator />
-
 
                 <ScrollArea className="h-[calc(100vh-140px)]">
                     {/* Sede activa + selector */}
@@ -209,6 +186,22 @@ export default function DoctorSideSheet() {
                             >
                                 <FileText className="h-4 w-4 mr-2" />
                                 Nueva nota clínica
+                            </Button>
+                            <Button
+                                variant="outline"
+                                className="justify-start"
+                                onClick={() => navigate("/doctor/settings/profile")}
+                            >
+                                <Edit3 className="w-4 h-4 mr-2" />
+                                Editar perfil
+                            </Button>
+                            <Button
+                                variant="outline"
+                                className="justify-start"
+                                onClick={() => navigate("/doctor/settings/signature")}
+                            >
+                                <Stamp className="w-4 h-4 mr-2" />
+                                Firma y sello
                             </Button>
                         </div>
                     </section>

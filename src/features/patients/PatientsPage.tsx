@@ -9,6 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogT
 import { Label } from "@/components/ui/label";
 import { Activity, Search, Plus, Users, FileText, Calendar, ArrowLeft } from "lucide-react";
 import { format, parseISO, compareDesc } from "date-fns";
+import DoctorSideSheet from "../doctor/components/DoctorSideSheet";
+import LogoTitle from "../doctor/components/LogoTitle";
 
 function lastConsultDate(patientId: string, clinicalRecords: ReturnType<typeof useAppStore.getState>["clinicalRecords"]) {
     const rec = clinicalRecords[patientId];
@@ -54,33 +56,11 @@ export default function PatientsPage() {
             {/* Header */}
             <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
                 <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-
-                        <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="gap-2">
-                            <ArrowLeft className="w-4 h-4" />
-                            Volver
-                        </Button>
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-gradient-primary rounded-xl flex items-center justify-center my-gradient-class">
-                                <Activity className="w-5 h-5 text-white" />
-                            </div>
-                            <div>
-                                <h1 className="text-xl font-semibold">Pacientes</h1>
-                                <p className="text-sm text-muted-foreground">Listado y acciones rápidas</p>
-                            </div>
-                        </div>
-                    </div>
-                    {/* seccion clinic name */}
-                    <div className="lg:flex items-center gap-2 hidden lg:solid ">
-                        <span className="text-sm text-muted-foreground font-semibold">Clínica:</span>
-                        <select
-                            className="h-8 rounded-md px-2 text-sm border-2 border-slate-400"
-                            value={clinic?.id ?? ""}
-                            onChange={(e) => setCurrentClinic(e.target.value)}
-                        >
-                            {clinics.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                        </select>
-                    </div>
+                    <DoctorSideSheet />
+                    <LogoTitle
+                        title="Pacientes"
+                        description={`Listado y acciones rápidas`}
+                    />
                     <Dialog open={openNew} onOpenChange={setOpenNew}>
                         <DialogTrigger asChild>
                             <Button className="gap-2"><Plus className="w-4 h-4" /> Nuevo paciente</Button>

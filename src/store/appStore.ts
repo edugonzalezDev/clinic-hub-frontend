@@ -15,6 +15,7 @@ export interface Clinic {
     city?: string;
     phone?: string;
     geo?: { lat: number; lng: number };
+    photoUrl?: string;           // ⬅️ nuevo
 }
 
 export interface Doctor {
@@ -26,7 +27,7 @@ export interface Doctor {
     signaturePng?: string; //url png sin fondo (firma)
     stampPng?: string;  //png sin fondo (sello)
     clinicIds?: string[];
-
+    photoUrl?: string;           // ⬅️ nuevo 
 }
 export interface Patient {
     id: string;
@@ -40,6 +41,7 @@ export interface Patient {
         memberId?: string;       // nro. afiliado / póliza
     };
     clinicIds?: string[];
+    photoUrl?: string;           // ⬅️ nuevo
 }
 
 export type DoctorSnapshot = {

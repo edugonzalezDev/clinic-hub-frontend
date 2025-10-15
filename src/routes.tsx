@@ -17,6 +17,7 @@ import NewPrescriptionPage from "./features/medical/NewPrescriptionPage";
 import NewCertificatePage from "./features/medical/NewCertificatePage";
 import PacienteDashboard from "./features/patient/pages/PatientDashboard";
 import MedicalHistory from "./features/patient/pages/MedicalHistory.tsx";
+import SettingsProfilePage from "./features/doctor/SettingsProfilePage.tsx";
 
 function RequireAuth({ children }: PropsWithChildren) {
   const user = useAppStore((s) => s.currentUser);
@@ -127,7 +128,13 @@ export default function AppRoutes() {
           </RequireAuth>
         }
       />
-
+      <Route
+        path="/doctor/settings/profile"
+        element={
+          <RequireAuth>
+            <SettingsProfilePage />
+          </RequireAuth>
+        } />
 
       {
         <Route
