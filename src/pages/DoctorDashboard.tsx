@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, Video, FileText, Users, LogOut, Activity, Clock, Award, Stamp, Pill } from "lucide-react";
+import { Calendar, Video, FileText, Users, LogOut, Clock, Award, Stamp, Pill } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { useDndOrder } from "@/hooks/useDndOrder"; // <— nuevo
@@ -9,6 +9,13 @@ import { parseISO, startOfToday, endOfToday, isWithinInterval, format, compareAs
 import useAppStore from "@/store/appStore";
 import { useCallback, useMemo } from "react";
 import MiniMap from "@/components/clinic/MiniMap";
+import DoctorSideSheet from "@/features/doctor/components/DoctorSideSheet";
+import LogoTitle from "@/features/doctor/components/LogoTitle";
+import ConsultationsByMonthLine from "@/components/charts/ConsultationsByMonthLine";
+import AppointmentsTypeDonut from "@/components/charts/AppointmentsTypeDonut";
+import PatientsByAgeBar from "@/components/charts/PatientsByAgeBar";
+import PatientsBySexDonut from "@/components/charts/PatientsBySexDonut";
+
 
 function hhmm(d: Date) {
     return new Intl.DateTimeFormat(undefined, { hour: "2-digit", minute: "2-digit" }).format(d);
@@ -16,7 +23,7 @@ function hhmm(d: Date) {
 
 const DoctorDashboard = () => {
     const navigate = useNavigate();
-    const { currentUser, currentDoctorId, doctors, patients, appointments, clinics, currentClinicId, setCurrentClinic, logout } = useAppStore();
+    const { currentUser, currentDoctorId, doctors, patients, appointments, clinics, currentClinicId, logout } = useAppStore();
 
     const clinic = useMemo(() => clinics.find(c => c.id === currentClinicId) ?? clinics[0], [clinics, currentClinicId]);
 
@@ -69,18 +76,18 @@ const DoctorDashboard = () => {
     );
 
     // contadores
-    const stats = [
-        { label: "Turnos de hoy", value: String(todayAppts.length), icon: Calendar, color: "text-primary" },
-        { label: "Notas pendientes", value: "0", icon: FileText, color: "text-yellow-600" },
-        {
-            label: "Pacientes totales", value: String(
-                // patients.filter(p => p.clinicIds?.includes(currentClinicId!)).length
-                currentClinicId
-                    ? patients.filter(p => (p.clinicIds ?? []).includes(currentClinicId)).length
-                    : patients.length
-            ), icon: Users, color: "text-secondary"
-        },
-    ];
+    // const stats = [
+    //     { label: "Turnos de hoy", value: String(todayAppts.length), icon: Calendar, color: "text-primary" },
+    //     { label: "Notas pendientes", value: "0", icon: FileText, color: "text-yellow-600" },
+    //     {
+    //         label: "Pacientes totales", value: String(
+    //             // patients.filter(p => p.clinicIds?.includes(currentClinicId!)).length
+    //             currentClinicId
+    //                 ? patients.filter(p => (p.clinicIds ?? []).includes(currentClinicId)).length
+    //                 : patients.length
+    //         ), icon: Users, color: "text-secondary"
+    //     },
+    // ];
 
     const statusBadge = (status: string) => {
         switch (status) {
@@ -92,34 +99,23 @@ const DoctorDashboard = () => {
     };
 
 
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
             {/* Header */}
-            <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
+            <header className="border-b border-slate-400 bg-card/50 backdrop-blur-sm sticky top-0 z-10">
                 <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-primary rounded-xl flex items-center justify-center my-gradient-class">
-                            <Activity className="w-5 h-5 text-white" />
-                        </div>
-                        <div>
-                            <h1 className="text-xl font-semibold">HealthConnect</h1>
-                            <p className="text-sm text-muted-foreground">Portal de profesionales</p>
-                        </div>
-                    </div>
-                    {/* seccion clinic name */}
-                    <div className="lg:flex items-center gap-2 hidden lg:solid ">
-                        <span className="text-sm text-muted-foreground font-semibold">Clínica:</span>
-                        <select
-                            className="h-8 rounded-md px-2 text-sm border-2 border-slate-400"
-                            value={clinic?.id ?? ""}
-                            onChange={(e) => setCurrentClinic(e.target.value)}
-                        >
-                            {clinics.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                        </select>
-                    </div>
+                    {/* ⬇️ Botón que abre el sheet */}
+                    <DoctorSideSheet />
+                    <LogoTitle
+                        title="HealthConnect"
+                        description="Portal de profesionales"
+                    />
+
                     <Button
                         variant="ghost"
                         size="sm"
+                        className="hidden lg:flex lg:flex-nowrap lg:justify-center lg:gap-1"
                         onClick={() => {
                             logout();
                             navigate("/", { replace: true });
@@ -143,7 +139,33 @@ const DoctorDashboard = () => {
                 </div>
 
                 {/* Stats */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="space-y-1">
+                    <h2 className="text-3xl font-semibold">
+                        Visualizá tus métricas de actividad clínica.
+                    </h2>
+
+                    {/* Gráficos */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        {/* <div className="lg:col-span-2">
+                            <ConsultationsByMonthLine />
+                        </div> */}
+                        {/* <div className="lg:col-span-1">
+                            <AppointmentsTypeDonut />
+                        </div> */}
+                    </div>
+                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                        <div className="lg:col-span-2">
+                            <PatientsByAgeBar />
+                        </div>
+                        <div className="lg:col-span-1">
+                            <PatientsBySexDonut />
+                        </div>
+                        <div className="lg:col-span-1">
+                            <AppointmentsTypeDonut />
+                        </div>
+                    </div>
+                </div>
+                {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {stats.map((stat, i) => (
                         <Card key={i} className="shadow-md">
                             <CardContent className="pt-6">
@@ -159,7 +181,9 @@ const DoctorDashboard = () => {
                             </CardContent>
                         </Card>
                     ))}
-                </div>
+                </div> */}
+
+                {/* Graficos */}
 
                 {/* Agenda de hoy */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

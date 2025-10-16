@@ -5,19 +5,19 @@ import { format } from "date-fns";
 import { openPrescriptionPdf } from "@/features/medical/pdfActions";
 import { genPrescriptionPdf } from "@/lib/pdf";
 import { toast } from "sonner";
-import type { Prescription } from "@/store/appStore";
+import type { Prescription, RxItem } from "@/store/appStore";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
 
+
 export default function PatientPrescriptionsTab({ patientId }: { patientId: string }) {
-    // --- edición de receta ---
     type DraftItem = { drug: string; dose: string; frequency: string; duration: string; notes?: string };
 
     const [editing, setEditing] = useState<null | Prescription>(null);
     const [diag, setDiag] = useState<string>("");
-    const [rows, setRows] = useState<DraftItem[]>([]);
+    const [rows, setRows] = useState<RxItem[]>([]);
 
     const {
         clinicalRecords,
@@ -80,8 +80,6 @@ export default function PatientPrescriptionsTab({ patientId }: { patientId: stri
         deletePrescription(patientId, rx.id);
         toast.success("Receta eliminada");
     };
-
-
 
     function startEdit(rx: Prescription) {
         setEditing(rx);
@@ -220,14 +218,14 @@ export default function PatientPrescriptionsTab({ patientId }: { patientId: stri
                             <Label>Medicamentos</Label>
                             <div className="space-y-2">
                                 {rows.map((r, i) => (
-                                    <div key={i} className="grid md:grid-cols-5 gap-2 items-center">
+                                    <div key={i} className="grid md:grid-cols-6 gap-2 items-center">
                                         <Input placeholder="Medicamento" value={r.drug} onChange={(e) => updateRow(i, { drug: e.target.value })} />
                                         <Input placeholder="Dosis" value={r.dose} onChange={(e) => updateRow(i, { dose: e.target.value })} />
                                         <Input placeholder="Frecuencia" value={r.frequency} onChange={(e) => updateRow(i, { frequency: e.target.value })} />
                                         <Input placeholder="Duración" value={r.duration} onChange={(e) => updateRow(i, { duration: e.target.value })} />
-                                        <div className="flex gap-2">
-                                            <Input placeholder="Notas" value={r.notes ?? ""} onChange={(e) => updateRow(i, { notes: e.target.value })} />
-                                            <Button variant="outline" type="button" onClick={() => removeRow(i)}>–</Button>
+                                        <div className="msj md:col-span-2 gap-2">
+                                            <Input className="w-3/4" placeholder="Notas" value={r.notes ?? ""} onChange={(e) => updateRow(i, { notes: e.target.value })} />
+                                            <Button className="w-1/4" variant="outline" type="button" onClick={() => removeRow(i)}>–</Button>
                                         </div>
                                     </div>
                                 ))}

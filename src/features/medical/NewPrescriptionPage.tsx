@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { genPrescriptionPdf } from "@/lib/pdf";
 import { toast } from "sonner";
-import { Activity, ArrowLeft } from "lucide-react";
+import DoctorSideSheet from "../doctor/components/DoctorSideSheet";
+import LogoTitle from "../doctor/components/LogoTitle";
 
 export default function NewPrescriptionPage() {
     const navigate = useNavigate();
@@ -35,20 +36,6 @@ export default function NewPrescriptionPage() {
 
     const onSave = () => {
         if (!canSave || !patient) return;
-
-        // const fileUrl = genPrescriptionPdf({
-        //     doctor: { name: doctor.name, license: doctor.license, signaturePng: doctor.signaturePng, stampPng: doctor.stampPng },
-        //     patient: { name: patient.name, docId: patient.docId, insurance: patient.insurance },
-        //     diagnosis: diagnosis || undefined,
-        //     items
-        // });
-
-        // const id = addPrescription(patientId, {
-        //     diagnosis: diagnosis || undefined,
-        //     items,
-        //     insuranceSnapshot: patient.insurance,
-        //     fileUrl
-        // });
 
         const doctorSnap = {
             name: doctor.name,
@@ -92,22 +79,11 @@ export default function NewPrescriptionPage() {
             {/* Header */}
             <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
                 <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="gap-2">
-                            <ArrowLeft className="w-4 h-4" />
-                            Volver
-                        </Button>
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 my-gradient-class rounded-xl flex items-center justify-center">
-                                <Activity className="w-5 h-5 text-white" />
-                            </div>
-                            <div>
-                                <h1 className="text-xl font-semibold">Gestión Receta Medica</h1>
-                                <p className="text-sm text-muted-foreground">Profesional: {doctors.find(d => d.id === doctorId)?.name ?? "—"}</p>
-                            </div>
-                        </div>
-                    </div>
-
+                    <DoctorSideSheet />
+                    <LogoTitle
+                        title="Gestión Receta Medica"
+                        description={`Profesional: ${doctors.find(d => d.id === doctorId)?.name ?? "—"}`}
+                    />
                 </div>
             </header>
             <div className="container mx-auto p-6">

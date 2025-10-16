@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Activity, FileText, Save, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
+import DoctorSideSheet from "../doctor/components/DoctorSideSheet";
+import LogoTitle from "../doctor/components/LogoTitle";
 
 const DRAFT_KEY = (doctorId?: string) => `hc/draft-note:${doctorId ?? "anon"}`;
 
@@ -85,18 +87,12 @@ export default function NewClinicalNotePage() {
         <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
             <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
                 <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <Button size="sm" variant="ghost" onClick={() => navigate(-1)}>
-                            <ArrowLeft className="w-4 h-4 mr-2" /> Volver
-                        </Button>
-                        <div className="w-10 h-10 bg-gradient-primary rounded-xl flex items-center justify-center my-gradient-class">
-                            <Activity className="w-5 h-5 text-white" />
-                        </div>
-                        <div>
-                            <h1 className="text-xl font-semibold">Nueva nota clínica</h1>
-                            <p className="text-sm text-muted-foreground">Registro de consulta</p>
-                        </div>
-                    </div>
+                    <DoctorSideSheet />
+                    <LogoTitle
+                        title="Nueva nota clínica"
+                        description={`Registro de consulta`}
+                    />
+
                     <Badge variant="secondary">
                         <FileText className="w-4 h-4 mr-1" /> {doctors.find(d => d.id === doctorId)?.name ?? "Profesional"}
                     </Badge>

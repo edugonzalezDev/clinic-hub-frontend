@@ -5,7 +5,12 @@ import { addMinutes } from "date-fns";
 
 /** Tipos base */
 export type Role = "patient" | "doctor" | "admin";
-export interface User { id: string; name: string; role: Role; email?: string; }
+export interface User {
+    id: string;
+    name: string;
+    role: Role;
+    email?: string;
+}
 
 // + Nuevo tipo
 export interface Clinic {
@@ -15,6 +20,7 @@ export interface Clinic {
     city?: string;
     phone?: string;
     geo?: { lat: number; lng: number };
+    photoUrl?: string;           // ⬅️ nuevo
 }
 
 export interface Doctor {
@@ -26,7 +32,9 @@ export interface Doctor {
     signaturePng?: string; //url png sin fondo (firma)
     stampPng?: string;  //png sin fondo (sello)
     clinicIds?: string[];
-
+    photoUrl?: string;
+    sex?: "male" | "female" | "other";
+    birthDate?: string;     // ISO yyyy-MM-dd    
 }
 export interface Patient {
     id: string;
@@ -40,6 +48,9 @@ export interface Patient {
         memberId?: string;       // nro. afiliado / póliza
     };
     clinicIds?: string[];
+    photoUrl?: string;           // ⬅️ nuevo
+    sex?: "male" | "female" | "other";
+    birthDate?: string;     // ISO yyyy-MM-dd
 }
 
 export type DoctorSnapshot = {
@@ -308,13 +319,20 @@ const seedDoctors: Doctor[] = [
     { id: "d4", name: "Dr. Carlos Sánchez", specialty: "Cardiología", color: "#F0E1D1", clinicIds: ["c2"] },
 ];
 const seedPatients: Patient[] = [
-    { id: "p1", name: "Juan Ramírez", docId: "34.567.890", phone: "+54 9 294 123", notes: "Alergia a penicilina", clinicIds: ["c1"] },
-    { id: "p2", name: "Ana Díaz", docId: "29.111.222", phone: "+54 9 2944396777", notes: "Alergia a penicilina", clinicIds: ["c1"] },
-    { id: "p3", name: "Carlos Rodríguez", docId: "XX.333.444", phone: "+54 9 294 123", notes: "Alergia a penicilina", clinicIds: ["c1"] },
-    { id: "p4", name: "María López", docId: "XX.555.666", phone: "+54 9 294 123", notes: "Alergia a penicilina", clinicIds: ["c1"] },
-    { id: "p5", name: "Pedro Gómez", docId: "XX.777.888", phone: "+54 9 294 123", notes: "Alergia a penicilina", clinicIds: ["c2"] },
-    { id: "p6", name: "Laura Sánchez", docId: "XX.999.000", phone: "+54 9 294 123", notes: "Alergia a penicilina", clinicIds: ["c2"] },
+    { id: "p1", name: "Juan Ramírez", docId: "34.567.890", phone: "+54 9 294 123", clinicIds: ["c1"], sex: "male", birthDate: "1990-04-12" },
+    { id: "p2", name: "Ana Díaz", docId: "29.111.222", phone: "+54 9 2944396777", clinicIds: ["c1"], sex: "female", birthDate: "1986-11-03" },
+    { id: "p3", name: "Carlos Rodríguez", docId: "XX.333.444", phone: "+54 9 294 123", clinicIds: ["c1"], sex: "male", birthDate: "2008-06-25" },
+    { id: "p4", name: "María López", docId: "XX.555.666", phone: "+54 9 294 123", clinicIds: ["c1"], sex: "female", birthDate: "1971-02-09" },
+    { id: "p5", name: "Pedro Gómez", docId: "XX.777.888", phone: "+54 9 294 123", clinicIds: ["c1"], sex: "male", birthDate: "1955-12-17" },
+    { id: "p6", name: "Laura Sánchez", docId: "XX.999.000", phone: "+54 9 294 123", clinicIds: ["c1"], sex: "female", birthDate: "2014-08-04" },
+    { id: "p7", name: "Alex Molina", docId: "40.222.333", clinicIds: ["c1"], sex: "other", birthDate: "1999-01-20" },
+    { id: "p8", name: "Sofía Herrera", docId: "41.444.555", clinicIds: ["c1"], sex: "female", birthDate: "2003-05-30" },
+    { id: "p9", name: "Diego Paredes", docId: "42.666.777", clinicIds: ["c1"], sex: "male", birthDate: "1962-09-14" },
+    { id: "p10", name: "Lucía Castro", docId: "43.888.999", clinicIds: ["c1"], /* sin sex/birthDate */ },
 ];
+
+console.log("Fecha de pruebas -> ", addMinutes(new Date(), 30).toISOString())
+
 const seedAppointments: Appointment[] = [
     {
         id: "a1",
@@ -371,6 +389,107 @@ const seedAppointments: Appointment[] = [
         status: "confirmed",
     },
 
+    {
+        id: "a1",
+        doctorId: "d1",
+        patientId: "p7",
+        startsAt: "2025-09-16T08:00:00.327Z",
+        endsAt: "2025-09-16T08:05:00.327Z",
+        type: "virtual",
+        status: "confirmed",
+        clinicId: "c1"
+    },
+    {
+        id: "a2",
+        doctorId: "d1",
+        patientId: "p8",
+        startsAt: "2025-09-16T08:10:00.327Z",
+        endsAt: "2025-09-16T08:20:00.327Z",
+        type: "presencial",
+        status: "confirmed",
+        clinicId: "c1"
+    },
+    {
+        id: "a3",
+        doctorId: "d1",
+        patientId: "p9",
+        startsAt: "2025-09-16T08:30:00.327Z",
+        endsAt: "2025-09-16T08:40:00.327Z",
+        type: "virtual",
+        status: "pending",
+        clinicId: "c1"
+    },
+    {
+        id: "a4",
+        doctorId: "d1",
+        patientId: "p10",
+        startsAt: "2025-08-16T08:00:00.327Z",
+        endsAt: "2025-08-16T08:10:00.327Z",
+        type: "presencial",
+        status: "confirmed",
+        clinicId: "c1"
+    },
+    {
+        id: "a5",
+        doctorId: "d1",
+        patientId: "p4",
+        startsAt: "2025-08-16T08:20:00.327Z",
+        endsAt: "2025-08-16T08:30:00.327Z",
+        type: "virtual",
+        status: "cancelled",
+        clinicId: "c2"
+    },
+    {
+        id: "a6",
+        doctorId: "d1",
+        patientId: "p5",
+        startsAt: "2025-08-16T08:35:00.327Z",
+        endsAt: "2025-08-16T08:40:00.327Z",
+        type: "presencial",
+        status: "confirmed",
+        clinicId: "c2"
+    },
+    {
+        id: "a7",
+        doctorId: "d1",
+        patientId: "p3",
+        startsAt: "2025-07-16T08:00:00.327Z",
+        endsAt: "2025-07-16T08:10:00.327Z",
+        type: "virtual",
+        status: "pending",
+        clinicId: "c2"
+    },
+    {
+        id: "a8",
+        doctorId: "d1",
+        patientId: "p8",
+        startsAt: "2025-06-16T08:00:00.327Z",
+        endsAt: "2025-06-16T08:10:00.327Z",
+        type: "presencial",
+        status: "confirmed",
+        clinicId: "c2"
+    },
+    {
+        id: "a9",
+        doctorId: "d1",
+        patientId: "p9",
+        startsAt: "2025-06-16T08:10:00.327Z",
+        endsAt: "2025-06-16T08:15:00.327Z",
+        type: "virtual",
+        status: "confirmed",
+        clinicId: "c1"
+    },
+    {
+        id: "a10",
+        doctorId: "d1",
+        patientId: "p10",
+        startsAt: "2025-06-16T08:15:00.327Z",
+        endsAt: "2025-06-16T08:20:00.327Z",
+        type: "presencial",
+        status: "pending",
+        clinicId: "c1"
+    }
+
 ];
 const seedUsers: AuthUser[] = [
     {
@@ -417,7 +536,7 @@ const seedClinical: Record<string, ClinicalRecord> = {
                 specialty: "Pediatría",
                 diagnosis: "Chequeo anual - Todo OK",
                 notes: "Cuidarse con las comidad, sal.",
-            }
+            },
         ],
         medications: [
             { id: "m1", name: "Lisinopril", dosage: "10 mg", frequency: "1 vez al día", status: "active" },
