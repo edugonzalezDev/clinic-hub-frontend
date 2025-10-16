@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
-    Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter
+    Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+    DialogDescription
 } from "@/components/ui/dialog";
 import useAppStore, { type Certificate } from "@/store/appStore";
 import { openCertificatePdf } from "@/features/medical/pdfActions";
@@ -160,8 +161,10 @@ export default function PatientCertificatesTab({ patientId }: { patientId: strin
                 <DialogContent className="sm:max-w-xl">
                     <DialogHeader>
                         <DialogTitle>Editar certificado</DialogTitle>
+                        <DialogDescription id="cert-edit-desc">
+                            Modificá motivo, recomendaciones y el período de vigencia.
+                        </DialogDescription>
                     </DialogHeader>
-
                     <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
                         <div className="md:col-span-3">
                             <Label>Motivo</Label>

@@ -30,7 +30,7 @@ export default function PatientsByAgeBar() {
 
         for (const p of list) {
             // soporta p.birthDate o p.date_of_bird (según tu modelo actual)
-            const raw = (p as any).birthDate ?? (p as any).date_of_bird;
+            const raw = p?.birthDate;
             let age: number | undefined;
             if (raw) {
                 const d = typeof raw === "string" ? parseISO(raw) : new Date(raw);

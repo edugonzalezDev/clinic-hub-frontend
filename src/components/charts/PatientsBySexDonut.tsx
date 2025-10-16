@@ -15,7 +15,7 @@ export default function PatientsBySexDonut() {
             : patients;
 
         for (const p of list) {
-            const sx = (p as any).sex?.toString().toLowerCase(); // por si aún no tipaste sex en Patient
+            const sx = p?.sex?.toString().toLowerCase();
             if (sx === "m" || sx === "male" || sx === "masculino") m++;
             else if (sx === "f" || sx === "female" || sx === "femenino") f++;
             else if (sx) o++;

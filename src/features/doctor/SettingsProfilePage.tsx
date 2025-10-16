@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router";
+// import { useNavigate } from "react-router";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -12,7 +12,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { ArrowLeft, Upload, Trash2 } from "lucide-react";
+import { Upload, Trash2 } from "lucide-react";
+import DoctorSideSheet from "./components/DoctorSideSheet";
+import LogoTitle from "./components/LogoTitle";
 
 const ProfileSchema = z.object({
     name: z.string().min(2, "Nombre muy corto"),
@@ -39,7 +41,7 @@ async function fileToDataURL(file: File): Promise<string> {
 }
 
 export default function SettingsProfilePage() {
-    const navigate = useNavigate();
+    // const navigate = useNavigate();
     const {
         currentUser,
         currentDoctorId,
@@ -121,12 +123,16 @@ export default function SettingsProfilePage() {
 
     return (
         <div className="container mx-auto px-4 py-6 space-y-6">
-            <div className="flex items-center justify-between">
-                <Button variant="ghost" className="gap-2" onClick={() => navigate(-1)}>
-                    <ArrowLeft className="w-4 h-4" /> Volver
-                </Button>
-                <div />
-            </div>
+            <header className="border-b border-slate-400 bg-card/50 backdrop-blur-sm sticky top-0 z-10">
+                <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+                    {/* ⬇️ Botón que abre el sheet */}
+                    <DoctorSideSheet />
+                    <LogoTitle
+                        title="Editar Perfil"
+                        description="Seccion para editar el perfil de Usuario"
+                    />
+                </div>
+            </header>
 
             <Card className="shadow-md">
                 <CardHeader>

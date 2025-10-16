@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { LabResult } from "@/store/appStore";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -36,7 +36,14 @@ export default function LabEditor({ open, onClose, initial, onSubmit }: Props) {
     return (
         <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
             <DialogContent>
-                <DialogHeader><DialogTitle>{initial ? "Editar estudio" : "Nuevo estudio"}</DialogTitle></DialogHeader>
+                <DialogHeader>
+                    <DialogTitle>
+                        {initial ? "Editar estudio" : "Nuevo estudio"}
+                    </DialogTitle>
+                    <DialogDescription id="lab-edit-desc">
+                        Definí el nombre del estudio, la fecha, el resultado y el estado.
+                    </DialogDescription>
+                </DialogHeader>
 
                 <div className="grid gap-3">
                     <div>

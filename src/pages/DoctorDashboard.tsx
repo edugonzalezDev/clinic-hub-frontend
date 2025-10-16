@@ -103,7 +103,7 @@ const DoctorDashboard = () => {
     return (
         <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
             {/* Header */}
-            <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
+            <header className="border-b border-slate-400 bg-card/50 backdrop-blur-sm sticky top-0 z-10">
                 <div className="container mx-auto px-4 py-4 flex items-center justify-between">
                     {/* ⬇️ Botón que abre el sheet */}
                     <DoctorSideSheet />
@@ -146,21 +146,24 @@ const DoctorDashboard = () => {
 
                     {/* Gráficos */}
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <div className="lg:col-span-2">
+                        {/* <div className="lg:col-span-2">
                             <ConsultationsByMonthLine />
-                        </div>
-                        <div className="lg:col-span-1">
+                        </div> */}
+                        {/* <div className="lg:col-span-1">
                             <AppointmentsTypeDonut />
-                        </div>
+                        </div> */}
                     </div>
-                    {/* <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                         <div className="lg:col-span-2">
                             <PatientsByAgeBar />
                         </div>
                         <div className="lg:col-span-1">
                             <PatientsBySexDonut />
                         </div>
-                    </div> */}
+                        <div className="lg:col-span-1">
+                            <AppointmentsTypeDonut />
+                        </div>
+                    </div>
                 </div>
                 {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {stats.map((stat, i) => (

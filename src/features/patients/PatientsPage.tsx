@@ -5,9 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Activity, Search, Plus, Users, FileText, Calendar, ArrowLeft } from "lucide-react";
+import { Search, Plus, Users, FileText, Calendar } from "lucide-react";
 import { format, parseISO, compareDesc } from "date-fns";
 import DoctorSideSheet from "../doctor/components/DoctorSideSheet";
 import LogoTitle from "../doctor/components/LogoTitle";
@@ -23,7 +23,7 @@ function lastConsultDate(patientId: string, clinicalRecords: ReturnType<typeof u
 
 export default function PatientsPage() {
     const navigate = useNavigate();
-    const { patients, clinicalRecords, currentClinicId, clinics, addPatient, setCurrentClinic } = useAppStore();
+    const { patients, clinicalRecords, currentClinicId, addPatient } = useAppStore();
     const [onlyClinic] = useState(true);
 
     const [q, setQ] = useState("");
@@ -34,7 +34,7 @@ export default function PatientsPage() {
     const [docId, setDocId] = useState("");
     const [phone, setPhone] = useState("");
 
-    const clinic = useMemo(() => clinics.find(c => c.id === currentClinicId) ?? clinics[0], [clinics, currentClinicId]);
+    // const clinic = useMemo(() => clinics.find(c => c.id === currentClinicId) ?? clinics[0], [clinics, currentClinicId]);
 
 
     const list = useMemo(() => {
@@ -68,6 +68,9 @@ export default function PatientsPage() {
                         <DialogContent>
                             <DialogHeader>
                                 <DialogTitle>Alta rápida de paciente</DialogTitle>
+                                <DialogDescription id="patient-new-desc">
+                                    Ingresá nombre, documento y (opcional) teléfono de contacto.
+                                </DialogDescription>
                             </DialogHeader>
                             <div className="space-y-3">
                                 <div className="space-y-1">

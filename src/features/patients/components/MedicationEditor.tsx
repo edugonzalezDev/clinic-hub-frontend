@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { Medication } from "@/store/appStore";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -36,7 +36,12 @@ export default function MedicationEditor({ open, onClose, initial, onSubmit }: P
         <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>{initial ? "Editar medicación" : "Nueva medicación"}</DialogTitle>
+                    <DialogTitle>
+                        {initial ? "Editar medicación" : "Nueva medicación"}
+                    </DialogTitle>
+                    <DialogDescription id="med-edit-desc">
+                        Indicá nombre, dosis, frecuencia y estado del tratamiento.
+                    </DialogDescription>
                 </DialogHeader>
 
                 <div className="grid gap-3">
