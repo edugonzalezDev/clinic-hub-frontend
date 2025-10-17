@@ -13,7 +13,7 @@ const DashboardActions: React.FC = () => {
     {
       label: "Join Call",
       icon: <Video />,
-      path: "/join-call",
+      path: "/paciente/teleconsulta/a1",
     },
     {
       label: "My Schedule",

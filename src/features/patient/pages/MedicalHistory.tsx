@@ -18,20 +18,43 @@ const MedicalHistory = () => {
   const consultations: Consultation[] = [
     {
       id: "1",
-      doctorName: "Dr. Sarah Johnson",
-      specialty: "Cardiology",
-      date: "Jan 15, 2024",
-      diagnosis: "Annual checkup - All clear",
-      notes:
-        "Patient shows good cardiovascular health. Continue current lifestyle.",
+      doctorName: "Dr. Carlos Mendoza",
+      specialty: "Cardiología",
+      type: "Teleconsulta",
+      status: "Próxima",
+      date: "15 Dic 2024",
+      time: "10:00 AM",
     },
     {
       id: "2",
-      doctorName: "Dr. Michael Chen",
-      specialty: "General Practice",
-      date: "Dec 10, 2023",
-      diagnosis: "Common cold",
-      notes: "Prescribed rest and over-the-counter medication.",
+      doctorName: "Dra. Ana Rodríguez",
+      specialty: "Medicina General",
+      type: "Presencial",
+      status: "Completada",
+      date: "10 Dic 2024",
+      time: "2:30 PM",
+      diagnosis:
+        "Control rutinario. Paciente en buen estado general. Se recomienda continuar con medicación actual.",
+    },
+    {
+      id: "3",
+      doctorName: "Dr. Luis Martínez",
+      specialty: "Dermatología",
+      type: "Teleconsulta",
+      status: "Completada",
+      date: "5 Dic 2024",
+      time: "11:15 AM",
+      diagnosis:
+        "Dermatitis leve. Se prescribe crema tópica y se recomienda evitar exposición solar directa.",
+    },
+    {
+      id: "4",
+      doctorName: "Dr. Roberto Silva",
+      specialty: "Traumatología",
+      type: "Presencial",
+      status: "Cancelada",
+      date: "1 Dic 2024",
+      time: "4:00 PM",
     },
   ];
 

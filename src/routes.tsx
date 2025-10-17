@@ -148,6 +148,14 @@ export default function AppRoutes() {
           </RequireAuth>
         }
       />
+      <Route
+        path="/paciente/teleconsulta/:appointmentId"
+        element={
+          <RequireAuth>
+            <TeleconsultationPage />
+          </RequireAuth>
+        }
+      />
       {/* compartidas */}
       {/* fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />
