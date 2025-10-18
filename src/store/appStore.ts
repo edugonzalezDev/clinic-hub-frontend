@@ -26,6 +26,8 @@ export interface Clinic {
 export interface Doctor {
     id: string;
     name: string;
+    email?: string,
+    phone?: string;
     specialty: string;
     color?: string;
     license?: string;          // matrícula/colegiatura
@@ -39,6 +41,7 @@ export interface Doctor {
 export interface Patient {
     id: string;
     name: string;
+    email?: string,
     docId: string;
     phone?: string;
     notes?: string;
