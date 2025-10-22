@@ -17,12 +17,13 @@ type LoginForm = {
     password: string;
 };
 
+
 type RegisterForm = {
     full_name: string;
     email: string;
     phone: string;
     dni: string;
-    sex: "masculino" | "femenino" | "otro";
+    sex: "male" | "female" | "other";
     date_of_bird: string;
     password: string;
     license?: string; // requerida solo si userType === "doctor"
@@ -76,7 +77,7 @@ const Login = () => {
             email: "",
             phone: "",
             dni: "",
-            sex: "masculino",
+            sex: "male",
             date_of_bird: "",
             password: "",
             license: "",
