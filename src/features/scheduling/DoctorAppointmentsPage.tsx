@@ -1,17 +1,19 @@
 // src/features/scheduling/DoctorAppointmentsPage.tsx
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Activity, ArrowLeft, CalendarPlus, Calendar as CalIcon, CheckCircle, Clock, Edit3, Trash2 } from "lucide-react";
+import { CalendarPlus, Calendar as CalIcon, CheckCircle, Clock, Edit3, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import useAppStore, { type Appointment } from "@/store/appStore";
 import { useDndOrder } from "@/hooks/useDndOrder";
-import { addMinutes, compareAsc, endOfDay, format, parseISO, startOfDay, isWithinInterval } from "date-fns";
+import { addMinutes, compareAsc, endOfDay, format, parse, parseISO, startOfDay, isWithinInterval } from "date-fns";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import DoctorSideSheet from "@/features/doctor/components/DoctorSideSheet";
+import LogoTitle from "../doctor/components/LogoTitle";
+
 
 function StatusBadge({ status }: { status: "pending" | "confirmed" | "cancelled" }) {
     if (status === "pending") return <Badge variant="secondary">pendiente</Badge>;
@@ -24,16 +26,17 @@ function hhmm(d: Date) {
 }
 
 export default function DoctorAppointmentsPage() {
-    const navigate = useNavigate();
     const {
         currentUser,
         currentDoctorId,
         doctors,
         patients,
         appointments,
+        currentClinicId,
         addAppointment,
         updateAppointment,
         deleteAppointment,
+
     } = useAppStore();
 
     // doctor actual (fallback al primero)
@@ -47,44 +50,69 @@ export default function DoctorAppointmentsPage() {
 
     // filtro por día (yyyy-MM-dd)
     const [day, setDay] = useState<string>(() => format(new Date(), "yyyy-MM-dd"));
-    useEffect(() => {
-        // sanity: si cambia doctor, mantenemos el día actual
-    }, [doctorId]);
+    const dayDate = useMemo(() => parse(day, "yyyy-MM-dd", new Date()), [day]);
+    const dayStart = useMemo(() => startOfDay(dayDate), [dayDate]);
+    const dayEnd = useMemo(() => endOfDay(dayDate), [dayDate]);
 
-    const dayStart = useMemo(() => startOfDay(new Date(day)), [day]);
-    const dayEnd = useMemo(() => endOfDay(new Date(day)), [day]);
+    // const matchesClinic = useCallback((clinicId?: string) => {
+    //     if (!currentClinicId) return true;
+    //     return clinicId === undefined || clinicId === currentClinicId;
+    // }, [currentClinicId]);
+
+    // const clinic = useMemo(() => clinics.find(c => c.id === currentClinicId) ?? clinics[0], [clinics, currentClinicId]);
+
+    const belongsToActiveClinic = useCallback((a: { clinicId?: string; patientId: string }) => {
+        if (!currentClinicId) return true;              // sin clínica activa, mostrar todo
+        if (a.clinicId) return a.clinicId === currentClinicId; // turno con clinicId: match estricto
+        const p = patients.find(pt => pt.id === a.patientId);  // turno legacy: infiero por paciente
+        return (p?.clinicIds ?? []).includes(currentClinicId);
+    }, [currentClinicId, patients]);
 
     const dayAppts = useMemo(() => {
         return appointments
-            .filter(
-                (a) =>
-                    a.doctorId === doctorId &&
-                    isWithinInterval(parseISO(a.startsAt), { start: dayStart, end: dayEnd })
+            .filter(a =>
+                a.doctorId === doctorId &&
+                belongsToActiveClinic(a) &&
+                isWithinInterval(parseISO(a.startsAt), { start: dayStart, end: dayEnd })
             )
             .sort((a, b) => compareAsc(parseISO(a.startsAt), parseISO(b.startsAt)));
-    }, [appointments, doctorId, dayStart, dayEnd]);
+    }, [appointments, doctorId, dayStart, dayEnd, belongsToActiveClinic]);
 
-    // Orden persistido por fecha+doctor
-    const storageKey = useMemo(() => `agenda:${doctorId}:${day}`, [doctorId, day]);
+
+
+    // // Orden persistido por fecha+doctor
+    // const storageKey = useMemo(() => `agenda:${doctorId}:${day}`, [doctorId, day]);
+    // const { ordered: orderedAppts, onDragEnd } = useDndOrder(dayAppts, (a) => a.id, storageKey);
+
+    // storageKey por doctor+día+clínica
+    const storageKey = useMemo(
+        () => `agenda:${doctorId}:${day}:clinic:${currentClinicId ?? "all"}`,
+        [doctorId, day, currentClinicId]
+    );
+
     const { ordered: orderedAppts, onDragEnd } = useDndOrder(dayAppts, (a) => a.id, storageKey);
+
 
     // ---- creación de turno ----
     const [showNew, setShowNew] = useState(false);
     const [newPatientId, setNewPatientId] = useState<string>(patients[0]?.id ?? "");
     const [newStart, setNewStart] = useState<string>(() => `${day}T09:00`);
     const [newDuration, setNewDuration] = useState<number>(20);
-    // const [newType, setNewType] = useState<"virtual" | "presencial">("virtual");
-    // const [newStatus, setNewStatus] = useState<"pending" | "confirmed" | "cancelled">("confirmed");
-    // estado TIPADO
+
     const [newType, setNewType] = useState<Appointment["type"]>("virtual");
     const [newStatus, setNewStatus] = useState<Appointment["status"]>("confirmed");
 
-    // handlers TIPADOS
-    const onChangeType = (e: React.ChangeEvent<HTMLSelectElement>) =>
-        setNewType(e.target.value as Appointment["type"]);
 
-    const onChangeStatus = (e: React.ChangeEvent<HTMLSelectElement>) =>
+    const onChangeNewType = (e: React.ChangeEvent<HTMLSelectElement>) =>
+        setNewType(e.target.value as Appointment["type"]);
+    const onChangeNewStatus = (e: React.ChangeEvent<HTMLSelectElement>) =>
         setNewStatus(e.target.value as Appointment["status"]);
+
+    const onChangeEditType = (e: React.ChangeEvent<HTMLSelectElement>) =>
+        setEditType(e.target.value as Appointment["type"]);
+
+    const onChangeEditStatus = (e: React.ChangeEvent<HTMLSelectElement>) =>
+        setEditStatus(e.target.value as Appointment["status"]);
 
     // probando =)
 
@@ -110,6 +138,7 @@ export default function DoctorAppointmentsPage() {
             endsAt: endsISO,
             type: newType,
             status: newStatus,
+            clinicId: currentClinicId ?? undefined,   // 👈 importante
         });
 
         toast.success("Turno creado");
@@ -146,34 +175,33 @@ export default function DoctorAppointmentsPage() {
             endsAt: endISO,
             type: editType,
             status: editStatus,
+            clinicId: currentClinicId ?? undefined,   // 👈 mantener la sede
+
         });
         setEditingId(null);
         toast.success("Turno actualizado");
     };
 
+    // opciones de pacientes (solo de la clínica activa si hay)
+    const patientOptions = useMemo(() => {
+        if (!currentClinicId) return patients;
+        return patients.filter(p => (p.clinicIds ?? []).includes(currentClinicId));
+    }, [patients, currentClinicId]);
 
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
             {/* Header */}
-            <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
-                <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="gap-2">
-                            <ArrowLeft className="w-4 h-4" />
-                            Volver
-                        </Button>
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 my-gradient-class rounded-xl flex items-center justify-center">
-                                <Activity className="w-5 h-5 text-white" />
-                            </div>
-                            <div>
-                                <h1 className="text-xl font-semibold">Gestión de agenda</h1>
-                                <p className="text-sm text-muted-foreground">Profesional: {doctors.find(d => d.id === doctorId)?.name ?? "—"}</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-3">
+            <header className="border-b border-slate-400  bg-card/50 backdrop-blur-sm sticky top-0 z-10">
+                <div className="container mx-auto px-4 py-4 flex items-center justify-between gap-1">
+
+                    <DoctorSideSheet />
+                    <LogoTitle
+                        title="Gestión de agenda"
+                        description={`Profesional: ${doctors.find(d => d.id === doctorId)?.name ?? "—"}`}
+                    />
+
+                    <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:gap-3">
                         <div className="flex items-center gap-2">
                             <CalIcon className="w-4 h-4 text-primary" />
                             <Input
@@ -235,7 +263,7 @@ export default function DoctorAppointmentsPage() {
                                         value={newPatientId}
                                         onChange={(e) => setNewPatientId(e.target.value)}
                                     >
-                                        {patients.map((p) => (
+                                        {patientOptions.map((p) => (
                                             <option key={p.id} value={p.id}>{p.name}</option>
                                         ))}
                                     </select>
@@ -262,9 +290,10 @@ export default function DoctorAppointmentsPage() {
                                     <Label>Tipo</Label>
                                     <select
                                         className="w-full border rounded-md h-10 px-3"
-                                        value={newType}
-                                        // onChange={(e) => setNewType(e.target.value as any)}
-                                        onChange={onChangeType}
+                                        // value={newType}
+                                        // // onChange={(e) => setNewType(e.target.value as any)}
+                                        // onChange={onChangeType}
+                                        value={newType} onChange={onChangeNewType}
 
                                     >
                                         <option value="virtual">Teleconsulta</option>
@@ -275,9 +304,10 @@ export default function DoctorAppointmentsPage() {
                                     <Label>Estado</Label>
                                     <select
                                         className="w-full border rounded-md h-10 px-3"
-                                        value={newStatus}
-                                        // onChange={(e) => setNewStatus(e.target.value as any)}
-                                        onChange={onChangeStatus}
+                                        // value={newStatus}
+                                        // // onChange={(e) => setNewStatus(e.target.value as any)}
+                                        // onChange={onChangeStatus}
+                                        value={newStatus} onChange={onChangeNewStatus}
 
                                     >
                                         <option value="confirmed">Confirmada</option>
@@ -301,7 +331,7 @@ export default function DoctorAppointmentsPage() {
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <Clock className="w-5 h-5 text-primary" />
-                            Agenda del {format(new Date(day), "dd/MM/yyyy")}
+                            Agenda del {format(dayDate, "dd/MM/yyyy")}
                         </CardTitle>
                         <CardDescription>Arrastra para cambiar el orden visual del día.</CardDescription>
                     </CardHeader>
@@ -309,8 +339,8 @@ export default function DoctorAppointmentsPage() {
                         {orderedAppts.length === 0 ? (
                             <p className="text-sm text-muted-foreground">No hay turnos en este día.</p>
                         ) : (
-                            <DragDropContext onDragEnd={onDragEnd}>
-                                <Droppable droppableId="day">
+                            <DragDropContext key={currentClinicId ?? "all"} onDragEnd={onDragEnd}>
+                                <Droppable droppableId={`day:${currentClinicId ?? "all"}`}>
                                     {(dropProvided) => (
                                         <div ref={dropProvided.innerRef} {...dropProvided.droppableProps} className="space-y-3">
                                             {orderedAppts.map((a, index) => {
@@ -347,7 +377,7 @@ export default function DoctorAppointmentsPage() {
                                                                         </div>
                                                                     </div>
 
-                                                                    <div className="flex gap-2">
+                                                                    <section className="buttons-gestionAgenda flex flex-col lg:flex-row lg:gap-2 gap-2">
                                                                         <Button size="sm" variant="outline" className="gap-1" onClick={() => openEdit(a.id)}>
                                                                             <Edit3 className="w-4 h-4" /> Editar
                                                                         </Button>
@@ -375,16 +405,17 @@ export default function DoctorAppointmentsPage() {
                                                                                 <CheckCircle className="w-4 h-4" /> Confirmar
                                                                             </Button>
                                                                         )}
-                                                                    </div>
-                                                                    <Button
-                                                                        variant="destructive"
-                                                                        size="sm"
-                                                                        onClick={() => {
-                                                                            if (confirm("¿Eliminar este turno?")) deleteAppointment(a.id);
-                                                                        }}
-                                                                    >
-                                                                        Eliminar
-                                                                    </Button>
+                                                                        <Button
+                                                                            variant="destructive"
+                                                                            size="sm"
+                                                                            onClick={() => {
+                                                                                if (confirm("¿Eliminar este turno?")) deleteAppointment(a.id);
+                                                                            }}
+                                                                        >
+                                                                            Eliminar
+                                                                        </Button>
+                                                                    </section>
+
                                                                 </div>
 
                                                                 {/* Editor inline */}
@@ -412,9 +443,10 @@ export default function DoctorAppointmentsPage() {
                                                                             <Label>Tipo</Label>
                                                                             <select
                                                                                 className="w-full border rounded-md h-10 px-3"
-                                                                                value={editType}
-                                                                                // onChange={(e) => setEditType(e.target.value as any)}
-                                                                                onChange={onChangeType}
+                                                                                // value={editType}
+                                                                                // // onChange={(e) => setEditType(e.target.value as any)}
+                                                                                // onChange={onChangeType}
+                                                                                value={editType} onChange={onChangeEditType}
 
                                                                             >
                                                                                 <option value="virtual">Teleconsulta</option>
@@ -425,9 +457,10 @@ export default function DoctorAppointmentsPage() {
                                                                             <Label>Estado</Label>
                                                                             <select
                                                                                 className="w-full border rounded-md h-10 px-3"
-                                                                                value={editStatus}
-                                                                                // onChange={(e) => setEditStatus(e.target.value as any)}
-                                                                                onChange={onChangeStatus}
+                                                                                // value={editStatus}
+                                                                                // // onChange={(e) => setEditStatus(e.target.value as any)}
+                                                                                // onChange={onChangeStatus}
+                                                                                value={editStatus} onChange={onChangeEditStatus}
 
                                                                             >
                                                                                 <option value="confirmed">Confirmada</option>

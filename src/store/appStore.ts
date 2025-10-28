@@ -5,20 +5,43 @@ import { addMinutes } from "date-fns";
 
 /** Tipos base */
 export type Role = "patient" | "doctor" | "admin";
-export interface User { id: string; name: string; role: Role; email?: string; }
+export interface User {
+    id: string;
+    name: string;
+    role: Role;
+    email?: string;
+}
+
+// + Nuevo tipo
+export interface Clinic {
+    id: string;
+    name: string;
+    address?: string;
+    city?: string;
+    phone?: string;
+    geo?: { lat: number; lng: number };
+    photoUrl?: string;           // ⬅️ nuevo
+}
 
 export interface Doctor {
     id: string;
     name: string;
+    email?: string,
+    phone?: string;
     specialty: string;
     color?: string;
     license?: string;          // matrícula/colegiatura
     signaturePng?: string; //url png sin fondo (firma)
     stampPng?: string;  //png sin fondo (sello)
+    clinicIds?: string[];
+    photoUrl?: string;
+    sex?: "male" | "female" | "other";
+    birthDate?: string;     // ISO yyyy-MM-dd    
 }
 export interface Patient {
     id: string;
     name: string;
+    email?: string,
     docId: string;
     phone?: string;
     notes?: string;
@@ -27,40 +50,25 @@ export interface Patient {
         plan?: string;
         memberId?: string;       // nro. afiliado / póliza
     };
+    clinicIds?: string[];
+    photoUrl?: string;           // ⬅️ nuevo
+    sex?: "male" | "female" | "other";
+    birthDate?: string;     // ISO yyyy-MM-dd
 }
 
-// ++++ certificados-recetas PDF +++
-// Documentos
-export type Certificate = {
-    id: string;
-    dateISO: string;
-    doctorId: string;
-    patientId: string;
-    reason: string;            // “certifica que…”
-    recommendations?: string;  // reposo, restricciones, etc.
-    period?: { fromISO: string; toISO: string };
-    fileUrl?: string;          // blob URL del PDF generado
+export type DoctorSnapshot = {
+    name: string;
+    license?: string;
+    signaturePng?: string;
+    stampPng?: string;
 };
 
-export type RxItem = {
-    drug: string;
-    dose: string;              // “500 mg”
-    frequency: string;         // “cada 8 h”
-    duration: string;          // “7 días”
-    notes?: string;
-};
-export type Prescription = {
-    id: string;
-    dateISO: string;
-    doctorId: string;
-    patientId: string;
-    diagnosis?: string;
-    items: RxItem[];
-    insuranceSnapshot?: Patient["insurance"]; // copia al momento de emitir
-    fileUrl?: string;
+export type PatientSnapshot = {
+    name: string;
+    docId?: string;
+    insurance?: Patient["insurance"];
 };
 
-// ++++ FIN - certificados-recetas PDF +++
 
 // 👇 Tipos de Historia Clínica
 export type Consultation = {
@@ -90,8 +98,46 @@ export type Vital = {
     metric: string;
     value: string;
     dateISO: string;
-    status?: string;
+    status?: "Normal" | "Alto" | "Bajo";
 };
+
+// ++++ certificados-recetas PDF +++
+// Documentos
+export type Certificate = {
+    id: string;
+    dateISO: string;
+    doctorId: string;
+    patientId: string;
+    reason: string;            // “certifica que…”
+    recommendations?: string;  // reposo, restricciones, etc.
+    period?: { fromISO: string; toISO: string };
+    fileUrl?: string;          // blob URL del PDF generado
+    doctorSnapshot?: DoctorSnapshot;
+    patientSnapshot?: PatientSnapshot;
+};
+
+export type RxItem = {
+    drug: string;
+    dose: string;              // “500 mg”
+    frequency: string;         // “cada 8 h”
+    duration: string;          // “7 días”
+    notes?: string;
+};
+export type Prescription = {
+    id: string;
+    dateISO: string;
+    doctorId: string;
+    patientId: string;
+    diagnosis?: string;
+    items: RxItem[];
+    insuranceSnapshot?: Patient["insurance"]; // copia al momento de emitir
+    fileUrl?: string;
+
+    doctorSnapshot?: DoctorSnapshot;
+    patientSnapshot?: PatientSnapshot;
+};
+
+// ++++ FIN - certificados-recetas PDF +++
 
 export type ClinicalRecord = {
     consultations: Consultation[];
@@ -111,6 +157,7 @@ export interface Appointment {
     endsAt: string;
     type: "presencial" | "virtual";
     status: "pending" | "confirmed" | "cancelled";
+    clinicId?: string;
 }
 
 /** Usuario “auth” (solo mock) */
@@ -135,11 +182,13 @@ interface AppState {
     currentUser?: User;
     currentPatientId?: string;
     currentDoctorId?: string;
+    currentClinicId?: string;
     accessToken?: string;
     refreshToken?: string;
 
     // “BD” mock
     users: AuthUser[];
+    clinics: Clinic[];
     doctors: Doctor[];
     patients: Patient[];
     appointments: Appointment[];
@@ -165,11 +214,13 @@ interface AppState {
 
     /** Setter de sesión “crudo” (útil si después conectás API real) */
     login: (p: { user: User; accessToken?: string; refreshToken?: string; linkedPatientId?: string; linkedDoctorId?: string }) => void;
-
     logout: () => void;
 
     // negocio
     addAppointment: (a: Appointment) => void;
+    updateAppointment: (id: string, patch: Partial<Appointment>) => void;
+    deleteAppointment: (id: string) => void;
+
     moveWaitlist: (from: number, to: number) => void;
 
     // historia clínica por paciente
@@ -178,10 +229,7 @@ interface AppState {
     // acciones HC (mínimas por ahora)
     upsertClinicalRecord: (patientId: string, patch: Partial<ClinicalRecord>) => void;
 
-    updateAppointment: (id: string, patch: Partial<Appointment>) => void;
-    deleteAppointment: (id: string) => void;
-
-    // gestion paciente
+    // GESTION PACIENTE
     addPatient: (p: Omit<Patient, "id"> & { id?: string }) => string; // devuelve id
     updatePatient: (id: string, patch: Partial<Patient>) => void;
     deletePatient?: (id: string) => void;
@@ -194,33 +242,100 @@ interface AppState {
 
     // para certificados-recetas
     updateDoctorProfile: (patch: Partial<Doctor>) => void;
+
+    // Certificados Medicos
     addCertificate: (
         patientId: string,
         data: Omit<Certificate, "id" | "doctorId" | "dateISO" | "patientId">
             & { dateISO?: string; fileUrl?: string }
     ) => string;
+    updateCertificate: (patientId: string, certId: string, patch: Partial<Certificate>) => void;
+    deleteCertificate: (patientId: string, certId: string) => void;
 
+    // Recetas Medicas
     addPrescription: (
         patientId: string,
         data: Omit<Prescription, "id" | "doctorId" | "dateISO" | "patientId">
             & { dateISO?: string; fileUrl?: string }
     ) => string;
+    updatePrescription: (patientId: string, rxId: string, patch: Partial<Prescription>) => void;
+    deletePrescription: (patientId: string, rxId: string) => void;
+
+    // acciones clínicas
+    setCurrentClinic: (clinicId: string) => void;
+    assignDoctorToClinic: (doctorId: string, clinicId: string) => void;
+    assignPatientToClinic: (patientId: string, clinicId: string) => void;
+    unassignDoctorFromClinic: (doctorId: string, clinicId: string) => void;
+    unassignPatientFromClinic: (patientId: string, clinicId: string) => void;
+
+
+    // MEDICATIONS
+    addMedicationEntry: (
+        patientId: string,
+        data: Omit<Medication, "id">
+    ) => string;
+    updateMedication: (patientId: string, id: string, patch: Partial<Medication>) => void;
+    deleteMedication: (patientId: string, id: string) => void;
+
+    // LABS
+    addLabResult: (
+        patientId: string,
+        data: Omit<LabResult, "id">
+    ) => string;
+    updateLab: (patientId: string, id: string, patch: Partial<LabResult>) => void;
+    deleteLab: (patientId: string, id: string) => void;
+
+    // VITALS
+    addVitalSign: (
+        patientId: string,
+        data: Omit<Vital, "id">
+    ) => string;
+    updateVital: (patientId: string, id: string, patch: Partial<Vital>) => void;
+    deleteVital: (patientId: string, id: string) => void;
 
 }
 
+const seedClinics: Clinic[] = [
+    {
+        id: "c1",
+        name: "Hospital Privado Regional del Sur",
+        address: "20 de Febrero 598",
+        city: "San Carlos de Bariloche, Río Negro",
+        phone: "+54 2944 525000",
+        geo: { lat: -41.13726414478574, lng: -71.31203699238564 },
+    },
+    {
+        id: "c2",
+        name: "Hospital Zonal Dr. Ramón Carrillo",
+        address: "Francisco Pascasio Moreno 601",
+        city: "San Carlos de Bariloche, Río Negro",
+        phone: "+54 2944 426100",
+        geo: { lat: -41.13620671740496, lng: -71.3000110554434 },
+    }
+];
+
 /** Seeds demo */
 const seedDoctors: Doctor[] = [
-    { id: "d1", name: "Dra. Sofía Pérez", specialty: "Clínica", color: "#A7D8F0" },
-    { id: "d2", name: "Dr. Martín Gómez", specialty: "Pediatría", color: "#BEE7C8" },
-    { id: "d3", name: "Dra. Laura Martínez", specialty: "Ginecología", color: "#FAD2CF" },
+    { id: "d1", name: "Dra. Sofía Pérez", specialty: "Clínica", color: "#A7D8F0", clinicIds: ["c1"] },
+    { id: "d2", name: "Dr. Martín Gómez", specialty: "Pediatría", color: "#BEE7C8", clinicIds: ["c1"] },
+    { id: "d3", name: "Dra. Laura Martínez", specialty: "Ginecología", color: "#FAD2CF", clinicIds: ["c2"] },
+    { id: "d4", name: "Dr. Carlos Sánchez", specialty: "Cardiología", color: "#F0E1D1", clinicIds: ["c2"] },
 ];
 const seedPatients: Patient[] = [
-    { id: "p1", name: "Juan Ramírez", docId: "34.567.890", phone: "+54 9 294 123", notes: "Alergia a penicilina" },
-    { id: "p2", name: "Ana Díaz", docId: "29.111.222", phone: "+54 9 2944396777", notes: "Alergia a penicilina" },
-    { id: "p3", name: "Carlos Rodríguez", docId: "XX.333.444", phone: "+54 9 294 123", notes: "Alergia a penicilina" },
-    { id: "p4", name: "María López", docId: "XX.555.666", phone: "+54 9 294 123", notes: "Alergia a penicilina" },
-    { id: "p5", name: "Pedro Gómez", docId: "XX.777.888", phone: "+54 9 294 123", notes: "Alergia a penicilina" },
+    { id: "p1", name: "Juan Ramírez", docId: "34.567.890", phone: "+54 9 294 123", clinicIds: ["c1"], sex: "male", birthDate: "1990-04-12" },
+    { id: "p2", name: "Ana Díaz", docId: "29.111.222", phone: "+54 9 2944396777", clinicIds: ["c1"], sex: "female", birthDate: "1986-11-03" },
+    { id: "p3", name: "Carlos Rodríguez", docId: "XX.333.444", phone: "+54 9 294 123", clinicIds: ["c1"], sex: "male", birthDate: "2008-06-25" },
+    { id: "p4", name: "María López", docId: "XX.555.666", phone: "+54 9 294 123", clinicIds: ["c1"], sex: "female", birthDate: "1971-02-09" },
+    { id: "p5", name: "Pedro Gómez", docId: "XX.777.888", phone: "+54 9 294 123", clinicIds: ["c1"], sex: "male", birthDate: "1955-12-17" },
+    { id: "p6", name: "Laura Sánchez", docId: "XX.999.000", phone: "+54 9 294 123", clinicIds: ["c1"], sex: "female", birthDate: "2014-08-04" },
+    { id: "p7", name: "Alex Molina", docId: "40.222.333", clinicIds: ["c1"], sex: "other", birthDate: "1999-01-20" },
+    { id: "p8", name: "Sofía Herrera", docId: "41.444.555", clinicIds: ["c1"], sex: "female", birthDate: "2003-05-30" },
+    { id: "p9", name: "Diego Paredes", docId: "42.666.777", clinicIds: ["c1"], sex: "male", birthDate: "1962-09-14" },
+    { id: "p10", name: "Lucía Castro", docId: "43.888.999", clinicIds: ["c1"], /* sin sex/birthDate */ },
 ];
+
+console.log("Fecha de pruebas -> ", addMinutes(new Date(), 30).toISOString())
+
 const seedAppointments: Appointment[] = [
     {
         id: "a1",
@@ -277,6 +392,107 @@ const seedAppointments: Appointment[] = [
         status: "confirmed",
     },
 
+    {
+        id: "a1",
+        doctorId: "d1",
+        patientId: "p7",
+        startsAt: "2025-09-16T08:00:00.327Z",
+        endsAt: "2025-09-16T08:05:00.327Z",
+        type: "virtual",
+        status: "confirmed",
+        clinicId: "c1"
+    },
+    {
+        id: "a2",
+        doctorId: "d1",
+        patientId: "p8",
+        startsAt: "2025-09-16T08:10:00.327Z",
+        endsAt: "2025-09-16T08:20:00.327Z",
+        type: "presencial",
+        status: "confirmed",
+        clinicId: "c1"
+    },
+    {
+        id: "a3",
+        doctorId: "d1",
+        patientId: "p9",
+        startsAt: "2025-09-16T08:30:00.327Z",
+        endsAt: "2025-09-16T08:40:00.327Z",
+        type: "virtual",
+        status: "pending",
+        clinicId: "c1"
+    },
+    {
+        id: "a4",
+        doctorId: "d1",
+        patientId: "p10",
+        startsAt: "2025-08-16T08:00:00.327Z",
+        endsAt: "2025-08-16T08:10:00.327Z",
+        type: "presencial",
+        status: "confirmed",
+        clinicId: "c1"
+    },
+    {
+        id: "a5",
+        doctorId: "d1",
+        patientId: "p4",
+        startsAt: "2025-08-16T08:20:00.327Z",
+        endsAt: "2025-08-16T08:30:00.327Z",
+        type: "virtual",
+        status: "cancelled",
+        clinicId: "c2"
+    },
+    {
+        id: "a6",
+        doctorId: "d1",
+        patientId: "p5",
+        startsAt: "2025-08-16T08:35:00.327Z",
+        endsAt: "2025-08-16T08:40:00.327Z",
+        type: "presencial",
+        status: "confirmed",
+        clinicId: "c2"
+    },
+    {
+        id: "a7",
+        doctorId: "d1",
+        patientId: "p3",
+        startsAt: "2025-07-16T08:00:00.327Z",
+        endsAt: "2025-07-16T08:10:00.327Z",
+        type: "virtual",
+        status: "pending",
+        clinicId: "c2"
+    },
+    {
+        id: "a8",
+        doctorId: "d1",
+        patientId: "p8",
+        startsAt: "2025-06-16T08:00:00.327Z",
+        endsAt: "2025-06-16T08:10:00.327Z",
+        type: "presencial",
+        status: "confirmed",
+        clinicId: "c2"
+    },
+    {
+        id: "a9",
+        doctorId: "d1",
+        patientId: "p9",
+        startsAt: "2025-06-16T08:10:00.327Z",
+        endsAt: "2025-06-16T08:15:00.327Z",
+        type: "virtual",
+        status: "confirmed",
+        clinicId: "c1"
+    },
+    {
+        id: "a10",
+        doctorId: "d1",
+        patientId: "p10",
+        startsAt: "2025-06-16T08:15:00.327Z",
+        endsAt: "2025-06-16T08:20:00.327Z",
+        type: "presencial",
+        status: "pending",
+        clinicId: "c1"
+    }
+
 ];
 const seedUsers: AuthUser[] = [
     {
@@ -323,7 +539,7 @@ const seedClinical: Record<string, ClinicalRecord> = {
                 specialty: "Pediatría",
                 diagnosis: "Chequeo anual - Todo OK",
                 notes: "Cuidarse con las comidad, sal.",
-            }
+            },
         ],
         medications: [
             { id: "m1", name: "Lisinopril", dosage: "10 mg", frequency: "1 vez al día", status: "active" },
@@ -337,6 +553,54 @@ const seedClinical: Record<string, ClinicalRecord> = {
             { id: "v1", metric: "TA", value: "120/80 mmHg", dateISO: "2024-01-15", status: "Normal" },
             { id: "v2", metric: "FC", value: "72 lpm", dateISO: "2024-01-15", status: "Normal" },
             { id: "v3", metric: "Peso", value: "75 kg", dateISO: "2024-01-15", status: "Normal" },
+        ],
+        certificates: [
+            {
+                id: "cert-1",
+                patientId: "p1",
+                doctorId: "d1",
+                dateISO: "2025-10-13T01:53:10.060Z",
+                reason: "ha sido atendido/a en consulta médica",
+                recommendations: "mensaje de pruebas",
+                period: {
+                    "fromISO": "2025-10-12",
+                    "toISO": "2025-10-12"
+                },
+                fileUrl: "blob:http://localhost:5173/bdc6dda5-1b46-4cea-af7c-9ecfddd69407",
+                doctorSnapshot: {
+                    name: "Dra. Sofía Pérez"
+                },
+                patientSnapshot: {
+                    name: "Juan Ramírez",
+                    docId: "34.567.890"
+                }
+            }
+        ],
+        prescriptions: [
+            {
+                id: "prx-1",
+                patientId: "p1",
+                doctorId: "d1",
+                dateISO: "2025-10-13T01:59:23.871Z",
+                diagnosis: "Fiebre Alta",
+                items: [
+                    {
+                        "drug": "Ibuprofeno",
+                        "dose": "300 mg",
+                        "frequency": "cada 8 hs",
+                        "duration": "3 Dias",
+                        "notes": "medicamento para bajar la fiebre alta, nota de pruebas ..."
+                    }
+                ],
+                fileUrl: "blob:http://localhost:5173/e252a072-f7f8-4145-ab49-9d2a9ba26bc6",
+                doctorSnapshot: {
+                    name: "Dra. Sofía Pérez"
+                },
+                patientSnapshot: {
+                    name: "Juan Ramírez",
+                    docId: "34.567.890"
+                }
+            }
         ],
     },
     p2: {
@@ -382,6 +646,8 @@ const seedClinical: Record<string, ClinicalRecord> = {
     }
 };
 
+
+
 const useAppStore = create<AppState>()(
     persist(
         (set, get) => ({
@@ -394,13 +660,13 @@ const useAppStore = create<AppState>()(
 
             // datos
             users: seedUsers,
+            clinics: seedClinics,
             doctors: seedDoctors,
             patients: seedPatients,
             appointments: seedAppointments,
             waitlist: [{ id: "w1", patientId: "p2", reason: "Consulta prioritaria" }],
 
             clinicalRecords: seedClinical,
-
             // ---- Acciones de sesión ----
             register: (p) => {
                 const { email, dni, full_name, role } = p;
@@ -477,11 +743,13 @@ const useAppStore = create<AppState>()(
                     x => x.email.toLowerCase() === email.toLowerCase() && x.password === password
                 );
                 if (!u) return { ok: false as const, error: "Credenciales inválidas." };
-
+                const s = get();
+                const doc = u.linkedDoctorId ? s.doctors.find(d => d.id === u.linkedDoctorId) : undefined;
                 set({
                     currentUser: { id: u.id, name: u.name, role: u.role, email: u.email },
                     currentDoctorId: u.linkedDoctorId,
                     currentPatientId: u.linkedPatientId,
+                    currentClinicId: doc?.clinicIds?.[0] ?? s.currentClinicId ?? s.clinics[0]?.id, // 👈
                     accessToken: "mock.access.token",
                     refreshToken: "mock.refresh.token",
                 });
@@ -517,7 +785,23 @@ const useAppStore = create<AppState>()(
             },
 
             // ---- Negocio ----
-            addAppointment: (a) => set({ appointments: [...get().appointments, a] }),
+            // Al crear turnos, guardar clinicId activa (sin romper compat)
+            addAppointment: (a) =>
+                set(s => ({
+                    appointments: [...s.appointments, { ...a, clinicId: a.clinicId ?? s.currentClinicId }]
+                })),
+
+            updateAppointment: (id, patch) =>
+                set((s) => ({
+                    appointments: s.appointments.map((a) =>
+                        a.id === id ? { ...a, ...patch } : a
+                    ),
+                })),
+
+            deleteAppointment: (id) =>
+                set((s) => ({
+                    appointments: s.appointments.filter((a) => a.id !== id),
+                })),
 
             moveWaitlist: (from, to) => set((s) => {
                 const items = [...s.waitlist];
@@ -540,17 +824,7 @@ const useAppStore = create<AppState>()(
                     },
                 });
             },
-            updateAppointment: (id, patch) =>
-                set((s) => ({
-                    appointments: s.appointments.map((a) =>
-                        a.id === id ? { ...a, ...patch } : a
-                    ),
-                })),
 
-            deleteAppointment: (id) =>
-                set((s) => ({
-                    appointments: s.appointments.filter((a) => a.id !== id),
-                })),
 
 
             // gestio paciente
@@ -627,6 +901,10 @@ const useAppStore = create<AppState>()(
                     recommendations: data.recommendations,
                     period: data.period,
                     fileUrl: data.fileUrl,
+
+                    // 👇 nuevos (opcionales)
+                    doctorSnapshot: data.doctorSnapshot,
+                    patientSnapshot: data.patientSnapshot,
                 };
                 set({
                     clinicalRecords: {
@@ -636,6 +914,36 @@ const useAppStore = create<AppState>()(
                 });
                 return id;
             },
+
+            updateCertificate: (patientId, certId, patch) =>
+                set((s) => {
+                    const rec = s.clinicalRecords[patientId];
+                    if (!rec?.certificates) return {};
+                    return {
+                        clinicalRecords: {
+                            ...s.clinicalRecords,
+                            [patientId]: {
+                                ...rec,
+                                certificates: rec.certificates.map(c => c.id === certId ? { ...c, ...patch } : c),
+                            },
+                        },
+                    };
+                }),
+
+            deleteCertificate: (patientId, certId) =>
+                set((s) => {
+                    const rec = s.clinicalRecords[patientId];
+                    if (!rec?.certificates) return {};
+                    return {
+                        clinicalRecords: {
+                            ...s.clinicalRecords,
+                            [patientId]: {
+                                ...rec,
+                                certificates: rec.certificates.filter(c => c.id !== certId),
+                            },
+                        },
+                    };
+                }),
 
             addPrescription: (patientId, data) => {
                 const s = get();
@@ -649,6 +957,10 @@ const useAppStore = create<AppState>()(
                     items: data.items,
                     insuranceSnapshot: data.insuranceSnapshot,
                     fileUrl: data.fileUrl,
+
+                    // 👇 nuevos (opcionales)
+                    doctorSnapshot: data.doctorSnapshot,
+                    patientSnapshot: data.patientSnapshot,
                 };
                 set({
                     clinicalRecords: {
@@ -657,6 +969,159 @@ const useAppStore = create<AppState>()(
                     }
                 });
                 return id;
+            },
+
+            updatePrescription: (patientId, rxId, patch) =>
+                set((s) => {
+                    const rec = s.clinicalRecords[patientId];
+                    if (!rec?.prescriptions) return {};
+                    return {
+                        clinicalRecords: {
+                            ...s.clinicalRecords,
+                            [patientId]: {
+                                ...rec,
+                                prescriptions: rec.prescriptions.map(r => r.id === rxId ? { ...r, ...patch } : r),
+                            },
+                        },
+                    };
+                }),
+
+            deletePrescription: (patientId, rxId) =>
+                set((s) => {
+                    const rec = s.clinicalRecords[patientId];
+                    if (!rec?.prescriptions) return {};
+                    return {
+                        clinicalRecords: {
+                            ...s.clinicalRecords,
+                            [patientId]: {
+                                ...rec,
+                                prescriptions: rec.prescriptions.filter(r => r.id !== rxId),
+                            },
+                        },
+                    };
+                }),
+
+            setCurrentClinic: (clinicId) => set({ currentClinicId: clinicId }),
+
+            assignDoctorToClinic: (doctorId, clinicId) =>
+                set(s => ({
+                    doctors: s.doctors.map(d => d.id === doctorId
+                        ? { ...d, clinicIds: Array.from(new Set([...(d.clinicIds ?? []), clinicId])) }
+                        : d
+                    )
+                })),
+
+            unassignDoctorFromClinic: (doctorId, clinicId) =>
+                set(s => ({
+                    doctors: s.doctors.map(d => d.id === doctorId
+                        ? { ...d, clinicIds: (d.clinicIds ?? []).filter(id => id !== clinicId) }
+                        : d
+                    )
+                })),
+
+            assignPatientToClinic: (patientId, clinicId) =>
+                set(s => ({
+                    patients: s.patients.map(p => p.id === patientId
+                        ? { ...p, clinicIds: Array.from(new Set([...(p.clinicIds ?? []), clinicId])) }
+                        : p
+                    )
+                })),
+
+            unassignPatientFromClinic: (patientId, clinicId) =>
+                set(s => ({
+                    patients: s.patients.map(p => p.id === patientId
+                        ? { ...p, clinicIds: (p.clinicIds ?? []).filter(id => id !== clinicId) }
+                        : p
+                    )
+                })),
+
+            // MEDICATIONS
+            // para la seccion historia clinica
+            addMedicationEntry: (patientId, data) => {
+                const id = `m-${crypto.randomUUID()}`;
+                const s = get();
+                const cur = s.clinicalRecords[patientId] ?? { consultations: [], medications: [], labs: [], vitals: [] };
+                const next: Medication = { id, ...data };
+                set({
+                    clinicalRecords: {
+                        ...s.clinicalRecords,
+                        [patientId]: { ...cur, medications: [...(cur.medications ?? []), next] }
+                    }
+                });
+                return id;
+            },
+            updateMedication: (patientId, id, patch) => {
+                const s = get();
+                const rec = s.clinicalRecords[patientId];
+                if (!rec) return;
+                const meds = rec.medications.map(m => (m.id === id ? { ...m, ...patch } : m));
+                set({ clinicalRecords: { ...s.clinicalRecords, [patientId]: { ...rec, medications: meds } } });
+            },
+            deleteMedication: (patientId, id) => {
+                const s = get();
+                const rec = s.clinicalRecords[patientId];
+                if (!rec) return;
+                const meds = rec.medications.filter(m => m.id !== id);
+                set({ clinicalRecords: { ...s.clinicalRecords, [patientId]: { ...rec, medications: meds } } });
+            },
+
+            // LABS
+            addLabResult: (patientId, data) => {
+                const id = `l-${crypto.randomUUID()}`;
+                const s = get();
+                const cur = s.clinicalRecords[patientId] ?? { consultations: [], medications: [], labs: [], vitals: [] };
+                const next: LabResult = { id, ...data };
+                set({
+                    clinicalRecords: {
+                        ...s.clinicalRecords,
+                        [patientId]: { ...cur, labs: [...(cur.labs ?? []), next] }
+                    }
+                });
+                return id;
+            },
+
+            updateLab: (patientId, id, patch) => {
+                const s = get();
+                const rec = s.clinicalRecords[patientId];
+                if (!rec) return;
+                const labs = rec.labs.map(l => (l.id === id ? { ...l, ...patch } : l));
+                set({ clinicalRecords: { ...s.clinicalRecords, [patientId]: { ...rec, labs } } });
+            },
+            deleteLab: (patientId, id) => {
+                const s = get();
+                const rec = s.clinicalRecords[patientId];
+                if (!rec) return;
+                const labs = rec.labs.filter(l => l.id !== id);
+                set({ clinicalRecords: { ...s.clinicalRecords, [patientId]: { ...rec, labs } } });
+            },
+
+            // VITALS
+            addVitalSign: (patientId, data) => {
+                const id = `v-${crypto.randomUUID()}`;
+                const s = get();
+                const cur = s.clinicalRecords[patientId] ?? { consultations: [], medications: [], labs: [], vitals: [] };
+                const next: Vital = { id, ...data };
+                set({
+                    clinicalRecords: {
+                        ...s.clinicalRecords,
+                        [patientId]: { ...cur, vitals: [...(cur.vitals ?? []), next] }
+                    }
+                });
+                return id;
+            },
+            updateVital: (patientId, id, patch) => {
+                const s = get();
+                const rec = s.clinicalRecords[patientId];
+                if (!rec) return;
+                const vitals = rec.vitals.map(v => (v.id === id ? { ...v, ...patch } : v));
+                set({ clinicalRecords: { ...s.clinicalRecords, [patientId]: { ...rec, vitals } } });
+            },
+            deleteVital: (patientId, id) => {
+                const s = get();
+                const rec = s.clinicalRecords[patientId];
+                if (!rec) return;
+                const vitals = rec.vitals.filter(v => v.id !== id);
+                set({ clinicalRecords: { ...s.clinicalRecords, [patientId]: { ...rec, vitals } } });
             },
 
         }),
@@ -669,9 +1134,11 @@ const useAppStore = create<AppState>()(
                 currentUser: s.currentUser,
                 currentPatientId: s.currentPatientId,
                 currentDoctorId: s.currentDoctorId,
+                currentClinicId: s.currentClinicId,
                 accessToken: s.accessToken,
                 refreshToken: s.refreshToken,
                 users: s.users,
+                clinics: s.clinics,
                 doctors: s.doctors,
                 patients: s.patients,
                 appointments: s.appointments,

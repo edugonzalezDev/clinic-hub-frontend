@@ -10,6 +10,8 @@ import { Label } from "@/components/ui/label";
 import { genCertificatePdf } from "@/lib/pdf";
 import { toast } from "sonner";
 import { Activity, ArrowLeft } from "lucide-react";
+import DoctorSideSheet from "../doctor/components/DoctorSideSheet";
+import LogoTitle from "../doctor/components/LogoTitle";
 
 export default function NewCertificatePage() {
     const navigate = useNavigate();
@@ -30,9 +32,36 @@ export default function NewCertificatePage() {
         if (!canSave) return;
         const p = patients.find(x => x.id === patientId)!;
 
+        // const fileUrl = genCertificatePdf({
+        //     doctor: { name: doctor.name, license: doctor.license, signaturePng: doctor.signaturePng, stampPng: doctor.stampPng },
+        //     patient: { name: p.name, docId: p.docId },
+        //     body: {
+        //         reason,
+        //         recommendations: recommendations || undefined,
+        //         period: fromISO && toISO ? { fromISO, toISO } : undefined,
+        //     }
+        // });
+
+        // const id = addCertificate(patientId, {
+        //     reason,
+        //     recommendations: recommendations || undefined,
+        //     period: fromISO && toISO ? { fromISO, toISO } : undefined,
+        //     fileUrl
+        // });
+
+        // para certificados
+        const doctorSnap = {
+            name: doctor.name,
+            license: doctor.license,
+            signaturePng: doctor.signaturePng,
+            stampPng: doctor.stampPng,
+        };
+        const patientSnap = { name: p.name, docId: p.docId };
+
+        // generar y abrir ahora
         const fileUrl = genCertificatePdf({
-            doctor: { name: doctor.name, license: doctor.license, signaturePng: doctor.signaturePng, stampPng: doctor.stampPng },
-            patient: { name: p.name, docId: p.docId },
+            doctor: doctorSnap,
+            patient: patientSnap,
             body: {
                 reason,
                 recommendations: recommendations || undefined,
@@ -40,11 +69,14 @@ export default function NewCertificatePage() {
             }
         });
 
+        // persistir con snapshots (no rompe nada si luego no los usás)
         const id = addCertificate(patientId, {
             reason,
             recommendations: recommendations || undefined,
             period: fromISO && toISO ? { fromISO, toISO } : undefined,
-            fileUrl
+            fileUrl,
+            doctorSnapshot: doctorSnap,
+            patientSnapshot: patientSnap,
         });
 
         toast.success("Certificado generado");
@@ -65,22 +97,11 @@ export default function NewCertificatePage() {
             {/* Header */}
             <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
                 <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="gap-2">
-                            <ArrowLeft className="w-4 h-4" />
-                            Volver
-                        </Button>
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 my-gradient-class rounded-xl flex items-center justify-center">
-                                <Activity className="w-5 h-5 text-white" />
-                            </div>
-                            <div>
-                                <h1 className="text-xl font-semibold">Gestión  Certificado Medico</h1>
-                                <p className="text-sm text-muted-foreground">Profesional: {doctors.find(d => d.id === doctorId)?.name ?? "—"}</p>
-                            </div>
-                        </div>
-                    </div>
-
+                    <DoctorSideSheet />
+                    <LogoTitle
+                        title="Gestión Certificado Medico"
+                        description={`Profesional: ${doctors.find(d => d.id === doctorId)?.name ?? "—"}`}
+                    />
                 </div>
             </header>
             <div className="container mx-auto p-6">

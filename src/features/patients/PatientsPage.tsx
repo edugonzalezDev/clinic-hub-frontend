@@ -5,10 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Activity, Search, Plus, Users, FileText, Calendar, ArrowLeft } from "lucide-react";
+import { Search, Plus, Users, FileText, Calendar } from "lucide-react";
 import { format, parseISO, compareDesc } from "date-fns";
+import DoctorSideSheet from "../doctor/components/DoctorSideSheet";
+import LogoTitle from "../doctor/components/LogoTitle";
 
 function lastConsultDate(patientId: string, clinicalRecords: ReturnType<typeof useAppStore.getState>["clinicalRecords"]) {
     const rec = clinicalRecords[patientId];
@@ -21,7 +23,9 @@ function lastConsultDate(patientId: string, clinicalRecords: ReturnType<typeof u
 
 export default function PatientsPage() {
     const navigate = useNavigate();
-    const { patients, clinicalRecords, addPatient } = useAppStore();
+    const { patients, clinicalRecords, currentClinicId, addPatient } = useAppStore();
+    const [onlyClinic] = useState(true);
+
     const [q, setQ] = useState("");
     const [openNew, setOpenNew] = useState(false);
 
@@ -30,15 +34,13 @@ export default function PatientsPage() {
     const [docId, setDocId] = useState("");
     const [phone, setPhone] = useState("");
 
-    const filtered = useMemo(() => {
-        const query = q.trim().toLowerCase();
-        if (!query) return patients;
-        return patients.filter(
-            (p) =>
-                p.name.toLowerCase().includes(query) ||
-                p.docId.toLowerCase().includes(query)
-        );
-    }, [patients, q]);
+    // const clinic = useMemo(() => clinics.find(c => c.id === currentClinicId) ?? clinics[0], [clinics, currentClinicId]);
+
+
+    const list = useMemo(() => {
+        if (!onlyClinic || !currentClinicId) return patients;
+        return patients.filter(p => (p.clinicIds ?? []).includes(currentClinicId));
+    }, [patients, onlyClinic, currentClinicId]);
 
     const onCreate = () => {
         if (!name.trim() || !docId.trim()) return;
@@ -54,22 +56,11 @@ export default function PatientsPage() {
             {/* Header */}
             <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
                 <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-
-                        <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="gap-2">
-                            <ArrowLeft className="w-4 h-4" />
-                            Volver
-                        </Button>
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-gradient-primary rounded-xl flex items-center justify-center my-gradient-class">
-                                <Activity className="w-5 h-5 text-white" />
-                            </div>
-                            <div>
-                                <h1 className="text-xl font-semibold">Pacientes</h1>
-                                <p className="text-sm text-muted-foreground">Listado y acciones rápidas</p>
-                            </div>
-                        </div>
-                    </div>
+                    <DoctorSideSheet />
+                    <LogoTitle
+                        title="Pacientes"
+                        description={`Listado y acciones rápidas`}
+                    />
                     <Dialog open={openNew} onOpenChange={setOpenNew}>
                         <DialogTrigger asChild>
                             <Button className="gap-2"><Plus className="w-4 h-4" /> Nuevo paciente</Button>
@@ -77,6 +68,9 @@ export default function PatientsPage() {
                         <DialogContent>
                             <DialogHeader>
                                 <DialogTitle>Alta rápida de paciente</DialogTitle>
+                                <DialogDescription id="patient-new-desc">
+                                    Ingresá nombre, documento y (opcional) teléfono de contacto.
+                                </DialogDescription>
                             </DialogHeader>
                             <div className="space-y-3">
                                 <div className="space-y-1">
@@ -116,7 +110,7 @@ export default function PatientsPage() {
                                 />
                             </div>
                             <Badge variant="secondary" className="ml-auto">
-                                <Users className="w-4 h-4 mr-1" /> {filtered.length} paciente{filtered.length === 1 ? "" : "s"}
+                                <Users className="w-4 h-4 mr-1" /> {list.length} paciente{list.length === 1 ? "" : "s"}
                             </Badge>
                         </div>
                     </CardContent>
@@ -124,7 +118,7 @@ export default function PatientsPage() {
 
                 {/* Listado */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {filtered.map((p) => {
+                    {list.map((p) => {
                         const last = lastConsultDate(p.id, clinicalRecords);
                         return (
                             <Card key={p.id} className="shadow-md hover:shadow-lg transition-shadow">
@@ -143,16 +137,18 @@ export default function PatientsPage() {
                                         Última consulta:{" "}
                                         {last ? format(parseISO(last), "dd/MM/yyyy") : "—"}
                                     </div>
-                                    <div className="flex gap-2">
+                                    <div className="flex flex-col xl:flex-row gap-2">
                                         <Button
-                                            size="sm"
+                                            // size="sm"
+                                            className="text-xs  p-2 w-auto h-auto md:p-2 md:text-[15px]"
                                             variant="outline"
                                             onClick={() => navigate(`/patients/${p.id}`)}
                                         >
                                             <FileText className="w-4 h-4 mr-2" /> Historia
                                         </Button>
                                         <Button
-                                            size="sm"
+                                            // size="sm"
+                                            className="text-xs  p-2 w-auto h-auto md:p-2 md:text-[15px]"
                                             onClick={() => navigate(`/doctor/appointments?patientId=${p.id}`)}
                                         >
                                             <Calendar className="w-4 h-4 mr-2" /> Nuevo turno
@@ -164,7 +160,7 @@ export default function PatientsPage() {
                     })}
                 </div>
 
-                {filtered.length === 0 && (
+                {list.length === 0 && (
                     <Card className="shadow-sm">
                         <CardContent className="py-10 text-center text-muted-foreground">
                             No se encontraron pacientes para “{q}”.
