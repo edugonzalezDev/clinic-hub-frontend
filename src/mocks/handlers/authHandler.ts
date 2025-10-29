@@ -1,7 +1,11 @@
 import { http, HttpResponse } from "msw";
 import type { RegisterDataPatient, User } from "@/types/domain";
 import { API_ENPOINTS } from "@/api/enpoints";
-import type { RegisterResponse, LoginResponse, VerifyMfaResponse } from "@/api/auth";
+import type {
+  RegisterResponse,
+  LoginResponse2 as LoginResponse,
+  VerifyMfaResponse,
+} from "@/api/auth";
 import { API_BASE_URL } from "@/lib/apiClient";
 
 const R = (path: string) => `${API_BASE_URL ?? ""}${path}`;
