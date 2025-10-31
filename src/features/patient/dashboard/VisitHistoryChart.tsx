@@ -1,3 +1,4 @@
+import { usePatientStore } from "../store/usePatientStore";
 import { Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -10,6 +11,7 @@ import {
 } from "chart.js";
 
 import type { ChartOptions, ChartData } from "chart.js";
+
 // Registrar los componentes necesarios de Chart.js
 ChartJS.register(
   CategoryScale,
@@ -21,61 +23,9 @@ ChartJS.register(
 );
 
 // ----------------------------------------------------------------------
-// 1. DATOS Y CONFIGURACIÓN
+// 1. DATOS Y CONFIGURACIÓN DEL GRÁFICO
 // ----------------------------------------------------------------------
 
-// Datos de las tarjetas de resumen
-const summaryData = [
-  { label: "Todas", count: 63, color: "text-indigo-600", dot: "bg-indigo-600" },
-  { label: "Canceladas", count: 45, color: "text-red-500", dot: "bg-red-500" },
-  { label: "Agendadas", count: 74, color: "text-pink-500", dot: "bg-pink-500" },
-  {
-    label: "Completadas",
-    count: 45,
-    color: "text-teal-600",
-    dot: "bg-teal-600",
-  },
-];
-
-// Datos del gráfico de barras apiladas
-const chartData: ChartData<"bar"> = {
-  labels: [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Abr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
-  ],
-  datasets: [
-    // Cardiología (Verde/Cian claro en la imagen)
-    {
-      label: "Cardiología",
-      data: [15, 15, 20, 18, 15, 9, 15, 12, 18, 15, 14, 17],
-      backgroundColor: "#10b981", // Emerald 500
-    },
-    // Medicina General (Verde brillante en la imagen)
-    {
-      label: "Medicina General",
-      data: [2, 7, 5, 5, 8, 5, 5, 7, 15, 14, 6, 0],
-      backgroundColor: "#22d3ee", // Cyan 500
-    },
-    // Quiropráctico (Morado/Índigo oscuro en la imagen)
-    {
-      label: "Quiropráctico",
-      data: [5, 1, 9, 11, 20, 4, 3, 8, 13, 13, 7, 8],
-      backgroundColor: "#4f46e5", // Indigo 600
-    },
-  ],
-};
-
-// Opciones del gráfico con corrección de tipado para 'position'
 const chartOptions: ChartOptions<"bar"> = {
   responsive: true,
   maintainAspectRatio: false,
@@ -97,7 +47,6 @@ const chartOptions: ChartOptions<"bar"> = {
   },
   plugins: {
     legend: {
-      // ✅ Corrección de tipado usando 'as const'
       position: "bottom" as const,
       labels: {
         usePointStyle: true,
@@ -123,31 +72,93 @@ const chartOptions: ChartOptions<"bar"> = {
 // 2. COMPONENTE REACT
 // ----------------------------------------------------------------------
 
-const VisitHistoryChart = () => (
-  <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
-    {/* Cabecera del Historial */}
+const VisitHistoryChart = () => {
+  // Usamos el store para obtener el historial de citas
+  const { appointmentHistory } = usePatientStore((state) => state);
 
-    {/* Tarjetas de Resumen */}
-    <div className="grid grid-cols-4 gap-4 mb-6">
-      {summaryData.map((summary, index) => (
-        <div
-          key={index}
-          className="p-3 bg-gray-50 rounded-lg border border-gray-200 text-center"
-        >
-          <div className="flex items-center justify-center space-x-1 mb-1">
-            <div className={`w-2 h-2 rounded-full ${summary.dot}`}></div>
-            <p className="text-sm font-medium text-gray-700">{summary.label}</p>
-          </div>
-          <p className="text-2xl font-bold text-gray-800">{summary.count}</p>
-        </div>
-      ))}
-    </div>
+  // Verificamos si hay citas disponibles
+  if (!appointmentHistory) {
+    return <div>No hay citas disponibles.</div>;
+  }
 
-    {/* Contenedor del Gráfico */}
-    <div style={{ height: "350px" }}>
-      <Bar data={chartData} options={chartOptions} />
+  // Filtramos y procesamos las citas para ajustarlas al formato del gráfico
+  const chartData: ChartData<"bar"> = {
+    labels: [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Abr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ],
+    datasets: [
+      {
+        label: "Cardiología",
+        data: Array(12).fill(0), // Inicializamos el array de 12 meses
+        backgroundColor: "#10b981", // Emerald 500
+      },
+      {
+        label: "Medicina General",
+        data: Array(12).fill(0),
+        backgroundColor: "#22d3ee", // Cyan 500
+      },
+      {
+        label: "Quiropráctico",
+        data: Array(12).fill(0),
+        backgroundColor: "#4f46e5", // Indigo 600
+      },
+      {
+        label: "Pediatría",
+        data: Array(12).fill(0),
+        backgroundColor: "#fbbf24", // Amarillo (para Pediatría)
+      },
+    ],
+  };
+
+  // Procesamos cada cita y asignamos su especialidad al mes correspondiente
+  appointmentHistory.forEach((appointment) => {
+    const month = new Date(appointment.starts_at).getMonth(); // Obtenemos el mes de la cita
+    const specialty = appointment.specialty;
+
+    // Aseguramos que los datos sean siempre de tipo número
+    const updateDataset = (datasetIndex: number, monthIndex: number) => {
+      const currentData = chartData.datasets[datasetIndex].data[monthIndex];
+      if (typeof currentData === "number") {
+        chartData.datasets[datasetIndex].data[monthIndex] = currentData + 1;
+      }
+    };
+
+    // Asignamos la cita al mes correspondiente según la especialidad
+    if (specialty === "Cardiologia") {
+      updateDataset(0, month);
+    } else if (specialty === "Medicina General") {
+      updateDataset(1, month);
+    } else if (specialty === "Quiropráctico") {
+      updateDataset(2, month);
+    } else if (specialty === "Pediatria") {
+      updateDataset(3, month);
+    }
+  });
+
+  return (
+    <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
+      <div className="mb-6">
+        <h2 className="text-xl font-semibold text-gray-800">
+          Historial de Citas
+        </h2>
+      </div>
+
+      <div style={{ height: "350px" }}>
+        <Bar data={chartData} options={chartOptions} />
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 export default VisitHistoryChart;

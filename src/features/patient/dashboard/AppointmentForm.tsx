@@ -1,4 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import {
+  getClinics,
+  getDoctors,
+  postAppointment,
+} from "../services/patientService";
+import { usePatientStore } from "../store/usePatientStore";
 
 interface AppointmentFormData {
   specialty: string;
@@ -6,16 +12,65 @@ interface AppointmentFormData {
   date: string;
   time: string;
   mode: string;
+  clinic: string;
+}
+
+interface Clinic {
+  id: string;
+  name: string;
+}
+
+interface Doctor {
+  id: string;
+  name: string;
 }
 
 const AppointmentForm: React.FC = () => {
+  const { patient } = usePatientStore(); // Obtener el estado del paciente desde el store
+
   const [form, setForm] = useState<AppointmentFormData>({
     specialty: "",
     doctor: "",
     date: "",
     time: "",
     mode: "Presencial",
+    clinic: "",
   });
+
+  const [clinics, setClinics] = useState<Clinic[]>([]);
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
+
+  // Llamada para obtener las clínicas al montar el componente
+  useEffect(() => {
+    const fetchClinics = async () => {
+      try {
+        const clinicsData = await getClinics();
+        const formattedClinics = clinicsData.map((clinic) => ({
+          id: clinic.id,
+          name: clinic.name,
+        }));
+        setClinics(formattedClinics);
+      } catch (error) {
+        console.error("Error al obtener las clínicas:", error);
+      }
+    };
+    fetchClinics();
+  }, []);
+
+  // Llamada para obtener los doctores cuando se seleccionan clínica y especialidad
+  useEffect(() => {
+    const fetchDoctors = async () => {
+      if (form.clinic && form.specialty) {
+        try {
+          const doctorsData = await getDoctors(form.clinic, form.specialty);
+          setDoctors(doctorsData);
+        } catch (error) {
+          console.error("Error al obtener los doctores:", error);
+        }
+      }
+    };
+    fetchDoctors();
+  }, [form.clinic, form.specialty]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>
@@ -24,10 +79,41 @@ const AppointmentForm: React.FC = () => {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Cita confirmada:", form);
-    alert("✅ Cita médica confirmada");
+
+    // Validar si patient_id está disponible
+    if (!patient?.id) {
+      alert("Error: El paciente no está autenticado.");
+      return;
+    }
+
+    const startsAt = new Date(`${form.date}T${form.time}:00`).toISOString();
+    const endsAt = new Date(
+      new Date(startsAt).getTime() + 59 * 60 * 1000 // Duración de 59 minutos
+    ).toISOString();
+
+    // Asegurarnos que "type" sea uno de los valores permitidos
+    const type: "presencial" | "virtual" =
+      form.mode === "Presencial" ? "presencial" : "virtual";
+    const status = "pending" as const;
+
+    const appointmentData = {
+      patient_id: patient.id, // Usar patient.id, asegurado que no sea undefined
+      doctor_id: form.doctor,
+      clinic_id: form.clinic,
+      starts_at: startsAt,
+      ends_at: endsAt,
+      type: type, // Ahora es un tipo "presencial" o "virtual"
+      status: status, // Estado inicial
+    };
+
+    try {
+      await postAppointment(appointmentData);
+      alert("✅ Cita médica confirmada");
+    } catch (error) {
+      console.error("Error al agendar la cita", error);
+    }
   };
 
   // Generar horas de 08:00 a 20:00
@@ -35,6 +121,9 @@ const AppointmentForm: React.FC = () => {
     const hour = (8 + i).toString().padStart(2, "0");
     return `${hour}:00`;
   });
+
+  // Obtener la fecha actual para limitar el calendario
+  const currentDate = new Date().toISOString().split("T")[0]; // Formato "YYYY-MM-DD"
 
   return (
     <section
@@ -52,6 +141,26 @@ const AppointmentForm: React.FC = () => {
         onSubmit={handleSubmit}
         className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 items-end"
       >
+        {/* Clínica */}
+        <div>
+          <label className="block text-sm font-medium text-gray-600 mb-1">
+            Clínica
+          </label>
+          <select
+            name="clinic"
+            value={form.clinic}
+            onChange={handleChange}
+            className="w-full border rounded-lg p-2 text-sm text-gray-700"
+          >
+            <option value="">Seleccione una Clínica</option>
+            {clinics.map((clinic) => (
+              <option key={clinic.id} value={clinic.id}>
+                {clinic.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
         {/* Especialidad */}
         <div>
           <label className="block text-sm font-medium text-gray-600 mb-1">
@@ -83,9 +192,11 @@ const AppointmentForm: React.FC = () => {
             className="w-full border rounded-lg p-2 text-sm text-gray-700"
           >
             <option value="">Seleccione un Médico</option>
-            <option value="Dra. Luisa Martínez">Dra. Luisa Martínez</option>
-            <option value="Dr. Luis Rodríguez">Dr. Luis Rodríguez</option>
-            <option value="Dra. Ana López">Dra. Ana López</option>
+            {doctors.map((doctor) => (
+              <option key={doctor.id} value={doctor.id}>
+                {doctor.name}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -99,6 +210,7 @@ const AppointmentForm: React.FC = () => {
             name="date"
             value={form.date}
             onChange={handleChange}
+            min={currentDate} // Establece la fecha mínima
             className="w-full border rounded-lg p-2 text-sm text-gray-700"
           />
         </div>

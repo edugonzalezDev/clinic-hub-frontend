@@ -11,29 +11,28 @@ import Modal from "./Modal";
 
 export interface Consultation {
   id: string;
-  doctorName: string;
+  doctor_name: string;
   specialty: string;
-  type: "Presencial" | "Teleconsulta";
-  status: "Próxima" | "Completada" | "Cancelada";
-  date: string;
-  time: string;
+  type: "presencial" | "virtual";
+  status: "pending" | "confirmed" | "cancelled";
+  starts_at: string;
   diagnosis?: string;
   notes?: string;
 }
 
 const statusStyles: Record<string, string> = {
-  Próxima:
+  pending:
     "bg-gradient-to-r from-blue-30 to-blue-100 border-l-4 border-blue-500",
-  Completada:
+  confirmed:
     "bg-gradient-to-r from-green-30 to-green-100 border-l-4 border-green-500",
-  Cancelada:
+  cancelled:
     "bg-gradient-to-r from-red-30 to-red-100 border-l-4 border-red-500",
 };
 
 const badgeStyles: Record<string, string> = {
-  Próxima: "bg-blue-600 text-white",
-  Completada: "bg-green-600 text-white",
-  Cancelada: "bg-red-600 text-white",
+  pending: "bg-blue-600 text-white",
+  confirmed: "bg-green-600 text-white",
+  cancelled: "bg-red-600 text-white",
 };
 
 const ConsultationCard: React.FC<{ consultation: Consultation }> = ({
@@ -44,18 +43,29 @@ const ConsultationCard: React.FC<{ consultation: Consultation }> = ({
     consultation.status
   );
 
+  const startDate = new Date(consultation.starts_at);
+  const date = startDate.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+  const time = startDate.toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
   const colorClass = statusStyles[status] || "bg-gray-100";
   const badgeClass = badgeStyles[status] || "bg-gray-400";
 
   const handleReagendar = () => {
-    if (status !== "Completada") {
+    if (status !== "confirmed") {
       setShowModal(true);
     }
   };
 
   const handleCancelar = () => {
-    if (status === "Próxima") {
-      setStatus("Cancelada");
+    if (status === "pending") {
+      setStatus("cancelled");
     }
   };
 
@@ -74,7 +84,7 @@ const ConsultationCard: React.FC<{ consultation: Consultation }> = ({
             </span>
             <span
               className={`text-xs font-semibold ${
-                consultation.type === "Presencial"
+                consultation.type === "presencial"
                   ? "text-red-600"
                   : "text-blue-600"
               }`}
@@ -86,14 +96,14 @@ const ConsultationCard: React.FC<{ consultation: Consultation }> = ({
           {/* Botones */}
           <div className="flex space-x-2">
             {/* Teleconsulta */}
-            {status === "Próxima" && consultation.type === "Teleconsulta" && (
+            {status === "pending" && consultation.type === "virtual" && (
               <button className="bg-green-500 text-white p-2 rounded-xl hover:bg-green-600">
                 <Video size={18} />
               </button>
             )}
 
             {/* Reagendar (solo si no completada) */}
-            {status !== "Completada" && (
+            {status !== "confirmed" && (
               <button
                 onClick={handleReagendar}
                 className="bg-blue-500 text-white p-2 rounded-xl hover:bg-blue-600"
@@ -103,7 +113,7 @@ const ConsultationCard: React.FC<{ consultation: Consultation }> = ({
             )}
 
             {/* Cancelar */}
-            {status === "Próxima" && (
+            {status === "pending" && (
               <button
                 onClick={handleCancelar}
                 className="bg-red-500 text-white p-2 rounded-xl hover:bg-red-600"
@@ -113,7 +123,7 @@ const ConsultationCard: React.FC<{ consultation: Consultation }> = ({
             )}
 
             {/* Archivos (solo completadas) */}
-            {status === "Completada" && (
+            {status === "confirmed" && (
               <>
                 <button className="bg-blue-600 text-white p-2 rounded-xl hover:bg-blue-700">
                   <FileText size={18} />
@@ -129,7 +139,7 @@ const ConsultationCard: React.FC<{ consultation: Consultation }> = ({
         {/* Información del doctor */}
         <div className="mb-2">
           <h3 className="font-semibold text-gray-800">
-            {consultation.doctorName}
+            {consultation.doctor_name}
           </h3>
           <p className="text-sm text-gray-600">{consultation.specialty}</p>
         </div>
@@ -138,16 +148,16 @@ const ConsultationCard: React.FC<{ consultation: Consultation }> = ({
         <div className="flex items-center text-sm text-gray-600 space-x-4">
           <div className="flex items-center space-x-1">
             <CalendarDays size={16} />
-            <span>{consultation.date}</span>
+            <span>{date}</span>
           </div>
           <div className="flex items-center space-x-1">
             <span>🕒</span>
-            <span>{consultation.time}</span>
+            <span>{time}</span>
           </div>
         </div>
 
         {/* Diagnóstico y notas */}
-        {status === "Completada" && (
+        {status === "confirmed" && (
           <div className="mt-3 bg-white/50 rounded-xl p-3 text-sm">
             {consultation.diagnosis && (
               <p className="text-gray-700">
@@ -162,7 +172,7 @@ const ConsultationCard: React.FC<{ consultation: Consultation }> = ({
         )}
 
         {/* Cancelada */}
-        {status === "Cancelada" && (
+        {status === "cancelled" && (
           <p className="mt-3 text-red-700 text-sm font-medium">
             Cancelada por el paciente
           </p>

@@ -2,10 +2,10 @@ import React from "react";
 
 export interface VitalSign {
   id: string;
-  label: string;
+  metric: string;
   value: string | number;
   unit?: string;
-  status?: "Normal" | "Elevada" | "Baja" | string;
+  status?: "Normal" | "Alto" | "Bajo" | string;
   icon?: string; // opcional si quieres usar un icono por signo
 }
 
@@ -18,7 +18,7 @@ const VitalSignsCard: React.FC<{ sign: VitalSign }> = ({ sign }) => {
       </div>
 
       {/* Label */}
-      <div className="text-sm text-gray-600">{sign.label}</div>
+      <div className="text-sm text-gray-600">{sign.metric}</div>
 
       {/* Valor y unidad */}
       <div className="mt-1 text-xl font-bold text-indigo-600">
@@ -31,9 +31,9 @@ const VitalSignsCard: React.FC<{ sign: VitalSign }> = ({ sign }) => {
       {/* Estado */}
       <div
         className={`mt-2 text-xs font-medium px-4 py-1 rounded-full ${
-          sign.status === "Elevada"
+          sign.status === "Alto"
             ? "bg-orange-100 text-orange-700"
-            : sign.status === "Baja"
+            : sign.status === "Bajo"
             ? "bg-blue-100 text-blue-700"
             : "bg-indigo-100 text-indigo-700"
         }`}
